@@ -321,7 +321,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">텍스트 상자 표시</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">오른쪽 텍스트 상자 표시/숨기기</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">이미지 번역 창 모드</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">이미지 번역 결과를 독립 창 또는 간소화된 플로팅 창으로 표시합니다.</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">이미지 번역 결과를 독립 창, 간소화된 플로팅 창 또는 원래 위치의 고정 창으로 표시합니다.</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">이미지 번역 OCR 인식 언어</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">이미지 번역 OCR 단계에서 사용하는 인식 언어입니다.</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">간소화 창에 인식 언어 표시</sys:String>
@@ -624,6 +624,12 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">병합 안 함</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">독립 창</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">간소화 창</sys:String>
+    <sys:String x:Key="ImageTranslateWindowModePinned">고정 창</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowToolbar">도구 모음 표시</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedHideToolbar">도구 모음 숨기기</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">창 그림자</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedPartialFailure">텍스트 블록 {0}개의 번역에 실패하여 원문을 유지했습니다.</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">업데이트에 실패했습니다. 이전 성공 결과를 계속 표시합니다. {0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">마지막 실행 위치 기억</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">마우스 커서가 있는 모니터</sys:String>

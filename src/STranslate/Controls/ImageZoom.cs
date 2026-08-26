@@ -326,6 +326,8 @@ public class ImageZoom : Control
     private static void OnOcrWordsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var control = (ImageZoom)d;
+        // 数据源切换后旧选择索引失效。
+        control.ResetSelection();
         control._fullTextCache = null; // 清除缓存
         control.UpdateSelectedText(); // 更新选中文本
     }
@@ -575,6 +577,23 @@ public class ImageZoom : Control
     }
 
     private bool IsPointOverAnyWord(Point point) => FindWordAtPoint(point) != null;
+
+    /// <summary>
+    /// 判断 ImageZoom 坐标是否位于可选文字上。
+    /// </summary>
+    public bool IsPointOverSelectableText(Point pointRelativeToControl)
+    {
+        if (_interactionCanvas == null || OcrWords == null || OcrWords.Count == 0)
+            return false;
+
+        var pointOnCanvas = TranslatePoint(pointRelativeToControl, _interactionCanvas);
+        return IsPointOverAnyWord(pointOnCanvas);
+    }
+
+    /// <summary>
+    /// 清除当前文字选择。
+    /// </summary>
+    public void ClearTextSelection() => ResetSelection();
 
     private bool SelectVisualLineAtPoint(Point point)
     {
@@ -1056,9 +1075,6 @@ public class ImageZoom : Control
 
     private void ResetSelection()
     {
-        if (OcrWords == null || OcrWords.Count == 0)
-            return;
-
         _isSelecting = false;
         _selectionStartIndex = null;
         _selectionEndIndex = null;

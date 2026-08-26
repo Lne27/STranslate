@@ -9,13 +9,19 @@ public class ServiceManager
     private readonly PluginManager _pluginManager;
     private readonly ServiceSettings _serviceSettings;
     private readonly ILogger<ServiceManager> _logger;
+    private readonly ImageTranslateExecutionCoordinator _imageTranslateExecutionCoordinator;
     private readonly List<Service> _services;
 
-    public ServiceManager(PluginManager pluginManager, ServiceSettings serviceSettings, ILogger<ServiceManager> logger)
+    public ServiceManager(
+        PluginManager pluginManager,
+        ServiceSettings serviceSettings,
+        ILogger<ServiceManager> logger,
+        ImageTranslateExecutionCoordinator? imageTranslateExecutionCoordinator = null)
     {
         _pluginManager = pluginManager;
         _serviceSettings = serviceSettings;
         _logger = logger;
+        _imageTranslateExecutionCoordinator = imageTranslateExecutionCoordinator ?? new ImageTranslateExecutionCoordinator();
         _services = [];
 
         Directory.CreateDirectory(DataLocation.PluginSettingsDirectory);
@@ -219,8 +225,8 @@ public class ServiceManager
             Helper.TryDeleteFile(service.IconPath);
         }
 
-        service.Dispose();
         _services.Remove(service);
+        _imageTranslateExecutionCoordinator.Retire(service, service.Dispose);
 
         var serviceDataCollection = GetServiceDataCollection(type);
         var serviceData = serviceDataCollection.FirstOrDefault(s => s.SvcID == service.ServiceID);

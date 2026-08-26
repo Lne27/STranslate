@@ -330,7 +330,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">Metin Panelini Göster</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">Sağ taraftaki metin panelini göster veya gizle.</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">Görsel Çeviri Pencere Modu</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">Görsel çeviri sonuçlarının bağımsız pencerede mi yoksa kompakt açılır pencerede mi açılacağını seçin.</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">Görsel çeviri sonuçlarının bağımsız pencerede, kompakt açılır pencerede veya yerinde sabitlenen pencerede açılmasını seçin.</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">Görsel Çeviri OCR Tanıma Dili</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">Görsel çeviri OCR aşamasında kullanılan tanıma dili.</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">Kompakt Pencerede Tanıma Dilini Göster</sys:String>
@@ -640,6 +640,12 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">Birleştirme</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">Bağımsız pencere</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">Kompakt pencere</sys:String>
+    <sys:String x:Key="ImageTranslateWindowModePinned">Sabitlenmiş pencere</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowToolbar">Araç çubuğunu göster</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedHideToolbar">Araç çubuğunu gizle</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">Pencere gölgesi</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedPartialFailure">{0} metin bloğu çevrilemedi; özgün metin korundu.</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">Güncelleme başarısız oldu; önceki başarılı sonuç gösterilmeye devam ediyor. {0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">Son Başlatma Konumunu Hatırla</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">İmleç</sys:String>

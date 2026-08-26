@@ -329,7 +329,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">显示文本框</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">显示/隐藏右侧文本框</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">图片翻译窗口模式</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">选择图片翻译结果使用独立窗口或精简悬浮窗口显示</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">选择图片翻译结果使用独立窗口、精简悬浮窗口或原位贴图窗口显示</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">图片翻译 OCR 识别语言</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">图片翻译 OCR 阶段使用的识别语言。</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">精简窗口显示识别语言</sys:String>
@@ -639,6 +639,12 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">不合并</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">独立窗口</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">精简窗口</sys:String>
+    <sys:String x:Key="ImageTranslateWindowModePinned">贴图窗口</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowToolbar">显示工具条</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedHideToolbar">隐藏工具条</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">窗口阴影</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedPartialFailure">{0} 个文本块翻译失败，已保留对应原文。</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">更新失败，仍显示上一次成功结果。{0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">记住上次的位置</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">鼠标光标所在显示器</sys:String>

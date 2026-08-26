@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace STranslate.Core;
 
-public class Screenshot(Settings settings) : IScreenshot
+public class Screenshot(Settings settings, PinnedWindowController pinnedWindowController) : IScreenshot
 {
     private const int DefaultCaptureDelayMs = 150;
 
@@ -25,6 +25,8 @@ public class Screenshot(Settings settings) : IScreenshot
 
     public async Task<ScreenshotCaptureResult?> GetScreenshotCaptureAsync()
     {
+        await using var captureScope = await pinnedWindowController.BeginCaptureAsync();
+
         if (ScreenGrabber.IsCapturing)
             return default;
 
@@ -39,7 +41,7 @@ public class Screenshot(Settings settings) : IScreenshot
         // 因此关闭 ScreenGrab 对 <64px 小截图的 padding 扩展，
         // 否则 padding 后的 bitmap 会被 Viewbox 缩放，导致原始内容被缩小。
         // 其他窗口模式保留默认 padding 行为以兼容历史。
-        var padImage = settings.ImageTranslateWindowMode != ImageTranslateWindowMode.Compact;
+        var padImage = ShouldPadImage(settings.ImageTranslateWindowMode);
 
         // CaptureWithRegionAsync 直接回传截图选区的物理屏幕坐标，
         // 无需事后反推（旧版 CaptureAsync 只回传 bitmap）。
@@ -50,8 +52,13 @@ public class Screenshot(Settings settings) : IScreenshot
         return new ScreenshotCaptureResult(capture.Bitmap, capture.Region);
     }
 
+    internal static bool ShouldPadImage(ImageTranslateWindowMode mode) =>
+        mode is not (ImageTranslateWindowMode.Compact or ImageTranslateWindowMode.Pinned);
+
     private async Task<Bitmap?> CaptureBitmapAsync()
     {
+        await using var captureScope = await pinnedWindowController.BeginCaptureAsync();
+
         if (ScreenGrabber.IsCapturing)
             return default;
 

@@ -321,7 +321,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">テキストボックスを表示</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">右側のテキストボックスの表示/非表示</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">画像翻訳ウィンドウモード</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">画像翻訳結果を独立ウィンドウまたはコンパクトなフローティングウィンドウで表示します。</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">画像翻訳結果を独立ウィンドウ、コンパクトなフローティングウィンドウ、または元の位置に固定するピン留めウィンドウで表示します。</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">画像翻訳 OCR 認識言語</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">画像翻訳の OCR 段階で使用する認識言語です。</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">コンパクトウィンドウに認識言語を表示</sys:String>
@@ -624,6 +624,12 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">結合しない</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">独立ウィンドウ</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">コンパクトウィンドウ</sys:String>
+    <sys:String x:Key="ImageTranslateWindowModePinned">ピン留めウィンドウ</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowToolbar">ツールバーを表示</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedHideToolbar">ツールバーを非表示</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">ウィンドウの影</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedPartialFailure">{0} 個のテキストブロックの翻訳に失敗したため、原文を保持しました。</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">更新に失敗しました。前回の成功結果を表示したままにします。{0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">前回の位置を記憶</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">マウスカーソルのある画面</sys:String>
