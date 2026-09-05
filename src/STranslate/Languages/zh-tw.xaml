@@ -871,4 +871,10 @@
     <sys:String x:Key="EditPrompt_Content">編輯</sys:String>
     <sys:String x:Key="Temperature">溫度控制</sys:String>
     <sys:String x:Key="Temperature_Description">控制著模型輸出的隨機性</sys:String>
+    <sys:String x:Key="ImageTranslatePin">貼圖</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">貼圖失敗</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">複製全文</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">顯示原圖</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">顯示譯文</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">視窗陰影</sys:String>
 </ResourceDictionary>
