@@ -4,26 +4,21 @@ Thank you for the guidance on interaction and architecture in #769. This revisio
 
 Changes addressing the feedback:
 
-1. **Use the existing Compact mode.** Standalone and Compact remain the two image-translation modes. The Pin button is available once a result is ready. A successful pin closes Compact so the existing entry points can start the next task. Pinned windows have no toolbar, and this change adds no hotkey configuration.
-2. **Keep pinned results static.** Each pin shares the frozen source and annotated images and the completed vector translation overlay, and copies the text-selection data. It has no translation ViewModel, OCR/translation task, automatic recomputation, debounce, execution coordinator or deferred service disposal.
-3. **Support text selection and copying.** Both layers support single-click/drag selection, double-click word selection, triple-click paragraph selection, and copying. Paragraph boundaries come from the existing layout analysis, so wrapped lines stay in their paragraph. Clipped translated text remains available for full-paragraph copying. Right-clicking text offers selection copying; the background menu provides Copy all, Original/Translation, Shadow and Close. Background dragging moves the pin; double-clicking the background closes it.
-4. **Keep multiple pins independent.** Later changes to translation services, languages, layout options or display-layer settings leave existing snapshots intact. Menu labels use the existing dynamic language resources. Starting another capture temporarily cloaks pinned content and chrome windows; completing or cancelling the selection restores them, including pins created or closed during capture.
-5. **Preserve the previous shadow and active glow.** The original colors, margins, blur radii, opacity and rendering biases remain unchanged. The chrome now clips the same WPF effects to four edge regions and fills the opaque center directly, reducing intermediate rendering surfaces. It remains one companion window with mouse passthrough. The shadow switch affects the current pin and sets the default for future pins; the active glow remains independent.
+1. Keep the existing Standalone and Compact modes, adding a Pin button to the Compact toolbar when a result is ready. A successful pin closes Compact so the existing entry points can start the next task. Pinned windows have no toolbar. No new mode or hotkey configuration is introduced.
+2. Keep pinned results static. Each pin shares the frozen source and annotated images and the completed vector translation overlay, and copies the text-selection data. It has no independent translation ViewModel, OCR/translation task, automatic recomputation, debounce, execution coordinator or deferred service disposal.
+3. Support single-click/drag selection, double-click word selection, triple-click paragraph selection and copying in both layers. Paragraph membership comes from the existing layout analysis, so wrapped lines stay in their paragraph; clipped translations retain their complete copyable text. Right-clicking text offers selection copying. The background menu provides Copy all, Original/Translation, Shadow and Close; dragging the background moves the pin, and double-clicking it closes the pin.
+4. Keep multiple pins independent. Later changes to services, languages, layout options or display-layer settings leave existing snapshots intact; menu labels use the existing dynamic language resources. Starting another capture temporarily hides pinned content and chrome windows. Completing or cancelling selection restores them, including pins created or closed during capture.
+5. Preserve the previous black shadow and active blue glow, with the same colors, margins, blur radii, opacity and rendering biases. The companion window keeps mouse passthrough and clips the original WPF effects to four edge regions, filling the opaque center directly to reduce rendering surfaces. The shadow switch affects the current pin and saves the default for future pins; the active glow remains independent.
 
-The main-window capture/translation dispatch, service management, OCR plugins and hotkey configuration retain the upstream implementation. The layout analyzer only carries forward paragraph membership it already determined. `PinnedWindowController` manages the pin collection and capture visibility; the content window handles static display and input using the existing `ImageZoom`. The rendering optimization stays inside the existing chrome file. Settings gains only the shadow default.
+The main-window capture/translation dispatch, service management, OCR plugins and hotkey configuration retain the upstream implementation. The layout analyzer carries forward paragraph membership it already determined without changing segmentation rules. `PinnedWindowController` manages the pin collection and capture visibility; the content window uses the existing `ImageZoom` for static display and input, and the chrome file contains the shadow/glow rendering. Settings gains only the shadow default. Static pins disable zoom animations, share the images already produced by Compact, and use no polling or OCR/translation recomputation. Chrome drawing is rebuilt on size, DPI or active-state changes; moving an unchanged pin reuses its drawing.
 
-Validation:
-
-- Debug and Release builds complete with no warnings or errors.
-- 321 regression tests pass in the test branch, including 168 comparisons against the original chrome renderer across state changes, sizes, and 100%–300% DPI. The rendered BGRA bytes match exactly. A separate 56-case rendering comparison also passes, and the two appearances were checked side by side in a visible layered WPF window.
-- The final upstream candidate runs the original 274 tests successfully.
-- The screenshot/OCR/translation-to-pin flow and core interactions were manually tested by the submitter. The rendering follow-up is covered by the pixel comparisons above. Window-level checks cover capture hide/restore, creation and closure during capture, and release after closing; all closed-window weak references are collected.
+Validation: Debug and Release builds complete with **zero warnings and errors**. All **321 regression tests** pass, including **168 byte-for-byte BGRA comparisons** with the original renderer across state changes, sizes and 100%–300% DPI; a separate **56-case** rendering comparison also passes. The final upstream candidate passes all **274 existing upstream tests**. Basic functional checks and manual testing of the final optimized build are complete: the submitter confirmed the screenshot/OCR/translation-to-pin flow, appearance and core interactions. Window-level checks cover capture hide/restore, pins created or closed during capture, and release after closing; closed-window weak-reference counts are **0** for the 1-, 10- and 30-window groups.
 
 See [Test code](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/src/Tests/STranslate.Tests) and [Performance tests and raw results](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/review/pinned-static).
 
-Performance and memory measurements:
+Performance: snapshot copying averages **8.58 μs** over 1,000 iterations, with **12,032 bytes** of managed allocation per snapshot. The 30-window hide/restore median is **33.09 ms**, including two DWM synchronizations. Process CPU-time increments during three-second idle samples are **109.38 / 62.50 / 46.88 ms** for 1 / 10 / 30 windows. Creation takes **152 ms** for one pin (previously **139 ms**) and **2.85 s** for a rapid batch of 30 (previously **2.16 s**); the additional clipped drawing nodes increase initialization time while reducing rendering-surface memory.
 
-Measured on Windows 11 build 26200, x64, .NET 10.0.11, 96 DPI, WPF Tier 2, using 30 independent 800×400 BGRA source/annotated image pairs and 73 characters per text layer. Windows are shown off-screen. Each configuration runs in three fresh processes after a one-window warm-up.
+Memory measurements use Windows 11 build 26200, x64, .NET 10.0.11, 96 DPI, WPF Tier 2, with 30 independent 800×400 BGRA source/annotated image pairs and 73 characters per text layer. Windows are shown off-screen. Each configuration runs in three fresh processes after a one-window warm-up:
 
 | Measurement, median of three runs | Previous renderer | Optimized renderer | Reduction |
 | --- | ---: | ---: | ---: |
@@ -31,7 +26,7 @@ Measured on Windows 11 build 26200, x64, .NET 10.0.11, 96 DPI, WPF Tier 2, using
 | Total increment with components added in stages | 459.79 MiB | 355.79 MiB | 22.6% |
 | Total increment after 30 sequential pins, each activated and then deactivated as the next opens | 371.77 MiB | 354.36 MiB | 4.7% |
 
-The staged measurement adds images, text/snapshots, content windows, and chrome in that order; it waits for Dispatcher idle, 500 ms, and a full GC at each stage. The sequence measurement uses the production pin controller, allows each new pin to render while active, and waits two seconds before the final GC/sample. These two orders exercise different allocations and reuse of WPF rendering resources.
+The staged measurement adds images, text/snapshots, content windows and chrome in order, ending with 29 shadows and one active glow; each stage waits for Dispatcher idle, 500 ms and a full GC. The sequential measurement uses the production pin controller, lets each new pin render while active, then waits two seconds before the final GC/sample. The two orders exercise different allocations and reuse of WPF rendering resources.
 
 For the optimized staged run with the median total increment:
 
@@ -43,13 +38,7 @@ For the optimized staged run with the median total increment:
 | Shadow and active-glow companion windows | 51.33 MiB | 14.43% |
 | Total | **355.79 MiB** | **100%** |
 
-Percentages are rounded.
-
-Snapshot copying averages **8.58 μs** over 1,000 iterations and allocates **12,032 bytes** per snapshot. The 30-window cloak/restore median is **33.09 ms**, including two DWM synchronizations. Chrome drawing is rebuilt on size, DPI or active-state changes; moving an unchanged pin reuses its drawing.
-
-The window-level creation sample takes **152 ms** for one pin (previously **139 ms**), and **2.85 s** for a rapid batch of 30 (previously **2.16 s**). The additional clipped drawing nodes trade some initialization time for smaller rendering surfaces.
-
-The memory figures are process-private increments recorded as each component is added, including rendering resources and runtime caches. Actual pinning shares the images already produced by Compact. Content rendering retains the existing hardware-accelerated ImageZoom and transparent-image behavior. Static pins have no polling or OCR/translation recomputation, and their zoom animations are disabled.
+Percentages are rounded. These are process-private increments recorded as each component is added, including rendering resources and runtime caches. The complete component measurement starts with image creation; actual pinning shares Compact's existing images. Content rendering retains the existing hardware-accelerated ImageZoom and transparent-image behavior.
 
 Below is a screenshot from testing in a real usage scenario:
 

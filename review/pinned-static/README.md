@@ -26,7 +26,7 @@ dotnet run --project review/pinned-static/PinnedPerf.csproj -c Release -p:Enable
 - 独立测量程序另有 56 组逐像素比较，结果见 [chrome-pixels.jsonl](chrome-pixels.jsonl)。
 - 96 DPI 的可见透明 WPF 图窗中，左右并排检查原绘制与新绘制。桌面工具返回 JPEG，图形按相同 JPEG 块位置排列；解码后两区域差异为 0，记录见 [chrome-desktop-pixels.json](chrome-desktop-pixels.json)。无损逐像素判断使用上面的 RenderTargetBitmap 数据。
 - 窗口生命周期检查覆盖所有内容/Chrome 窗的截图 cloak、重复请求不排队、租约重复释放、截图期间创建/关闭窗口、完成后恢复及关闭后回收。1 / 10 / 30 窗的已关闭 WeakReference 存活数均为 0。
-- 截图、OCR、翻译、Pin 与核心交互链路由提交者手动测试；本次渲染改动由上述像素比较与窗口检查验证。
+- 提交者已手动测试最终优化版本的截图、OCR、翻译、Pin 与核心交互链路，并确认外观与交互符合预期；渲染改动另有上述像素比较与窗口检查验证。
 
 ## 内存
 
