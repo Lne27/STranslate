@@ -885,4 +885,10 @@ Alt+کلیک چپ -> تنظیمات ترجمه متن</sys:String>
     <sys:String x:Key="EditPrompt_Content">ویرایش</sys:String>
     <sys:String x:Key="Temperature">میزان خلاقیت (Temperature)</sys:String>
     <sys:String x:Key="Temperature_Description">کنترل میزان تصادفی بودن خروجی مدل</sys:String>
+    <sys:String x:Key="ImageTranslatePin">سنجاق</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">سنجاق نتیجه ناموفق بود</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">کپی تمام متن</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">نمایش تصویر اصلی</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">نمایش ترجمه</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">سایه پنجره</sys:String>
 </ResourceDictionary>

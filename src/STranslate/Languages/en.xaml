@@ -868,4 +868,10 @@
     <sys:String x:Key="EditPrompt_Content">Edit</sys:String>
     <sys:String x:Key="Temperature">Temperature Control</sys:String>
     <sys:String x:Key="Temperature_Description">Controls the randomness of the model's output</sys:String>
+    <sys:String x:Key="ImageTranslatePin">Pin</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">Could not pin the result</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">Copy all text</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">Show original image</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">Show translation</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">Window shadow</sys:String>
 </ResourceDictionary>

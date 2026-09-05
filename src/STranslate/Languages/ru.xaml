@@ -868,4 +868,10 @@
     <sys:String x:Key="EditPrompt_Content">Изменить</sys:String>
     <sys:String x:Key="Temperature">Температура</sys:String>
     <sys:String x:Key="Temperature_Description">Управляет случайностью ответов модели</sys:String>
+    <sys:String x:Key="ImageTranslatePin">Закрепить</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">Не удалось закрепить</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">Копировать весь текст</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">Показать оригинал</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">Показать перевод</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">Тень окна</sys:String>
 </ResourceDictionary>

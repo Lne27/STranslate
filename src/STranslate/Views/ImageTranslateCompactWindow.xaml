@@ -234,6 +234,13 @@
                     Style="{StaticResource CompactToolbarComboBoxStyle}"
                     ToolTip="{DynamicResource TranslateLanguage}" />
                 <control:IconButton
+                    x:Name="PART_PinButton"
+                    AutomationProperties.Name="{DynamicResource ImageTranslatePin}"
+                    Icon="{x:Static ui:FluentSystemIcons.Pin_24_Regular}"
+                    IsEnabled="{Binding CanPin}"
+                    Style="{StaticResource CompactToolbarIconButtonStyle}"
+                    ToolTip="{DynamicResource ImageTranslatePin}" />
+                <control:IconButton
                     Command="{Binding CancelCommand}"
                     CommandParameter="{Binding ElementName=STImageTranslateCompactWindow}"
                     Icon="{x:Static ui:FluentSystemIcons.Dismiss_20_Regular}"
