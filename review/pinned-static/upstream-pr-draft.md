@@ -1,6 +1,6 @@
 # feat: pin static image translation results from Compact
 
-Thank you for your detailed feedback on the interaction and architecture. This implementation follows your suggested flow: complete screenshot capture, OCR and translation in Compact, then use **Pin** to keep the result in an independent, always-on-top window.
+Thank you very much for taking the time to review my contribution and explain your suggestions in detail. Your feedback helped me understand where I had made the implementation unnecessarily complicated and how to better fit the existing project. I've reworked it around the flow you suggested: complete screenshot capture, OCR and translation in Compact, then use **Pin** to keep the result in an independent, always-on-top window. I'd be grateful for any further guidance on anything that still needs improvement.
 
 Changes addressing the feedback:
 
