@@ -41,6 +41,7 @@ internal static class CompactHotkeys
         var controller = new PinnedWindowController(settings, i18n, null!);
         using var provider = new ServiceCollection()
             .AddSingleton(i18n)
+            .AddSingleton<Microsoft.Extensions.Logging.ILogger<HotkeyMapper>>(NullLogger<HotkeyMapper>.Instance)
             .AddSingleton(controller)
             .AddTransient(_ => new ImageTranslateWindowViewModel(
                 NullLogger<ImageTranslateWindowViewModel>.Instance, settings, hotkeys,
@@ -48,7 +49,9 @@ internal static class CompactHotkeys
             .BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
 
-        foreach (var shortcut in new[] { "F8", "Ctrl + Shift + P" })
+        Check(!hotkeys.RegisteredHotkeys.Any(item => item.Hotkey == "Ctrl + Alt + F8"), "Test combination is unused by application defaults");
+        Check(HotkeyMapper.CheckAvailability(new HotkeyModel("Ctrl + Alt + F8")), "Ctrl + Alt + F8 passes the existing system availability check");
+        foreach (var shortcut in new[] { "F8", "Ctrl + Alt + F8" })
         {
             var window = new ImageTranslateCompactWindow();
             var vm = (ImageTranslateWindowViewModel)window.DataContext;
@@ -56,16 +59,16 @@ internal static class CompactHotkeys
             var binding = (KeyBinding)window.InputBindings[0];
             await Idle();
             Check(ReferenceEquals(button.Command, binding.Command), "Compiled key binding shares Pin button command");
-            Check(binding.Key == Key.P && binding.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift), "Default gesture");
-            hotkeys.PinImageTranslateHotkey.Key = "F8";
+            Check(binding.Key == Key.None && binding.Modifiers == ModifierKeys.None, "No shortcut assigned by default");
+            hotkeys.PinImageTranslateHotkey.Key = "Ctrl + Alt + F8";
             await Idle();
-            Check(binding.Key == Key.F8 && binding.Modifiers == ModifierKeys.None, "Live custom gesture");
+            Check(binding.Key == Key.F8 && binding.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt), "Live custom gesture");
             hotkeys.PinImageTranslateHotkey.Key = Constant.EmptyHotkey;
             await Idle();
             Check(binding.Key == Key.None && binding.Modifiers == ModifierKeys.None, "Cleared gesture");
             hotkeys.PinImageTranslateHotkey.Key = hotkeys.PinImageTranslateHotkey.Default;
             await Idle();
-            Check(binding.Key == Key.P && binding.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift), "Live reset");
+            Check(binding.Key == Key.None && binding.Modifiers == ModifierKeys.None, "Reset leaves shortcut unassigned");
             binding.Command!.Execute(null);
             Check(!vm.CanPin && !button.IsEnabled && Pins() == 0 && window.DataContext != null, "Incomplete result rejects Pin");
 
@@ -87,6 +90,8 @@ internal static class CompactHotkeys
             binding.Command.Execute(null);
             Check(!vm.CanPin && Pins() == 0, "Executing result rejects Pin");
             vm.IsExecuting = false;
+            await Idle();
+            Check(binding.Key == Key.None && button.IsEnabled, "Pin button remains enabled without a shortcut");
             hotkeys.PinImageTranslateHotkey.Key = shortcut;
             await Idle();
             Check(vm.CanPin && button.IsEnabled, "Completed result enables Pin");

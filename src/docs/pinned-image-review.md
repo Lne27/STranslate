@@ -1,6 +1,6 @@
 # Compact 结果贴图：本轮审阅说明
 
-本轮按 [维护者在 PR #769 的回复](https://github.com/STranslate/STranslate/pull/769#issuecomment-5536176286) 重构。Compact 工具条上的 Pin 按钮和可配置的 **Ctrl+Shift+P** 共用现有 Pin 命令；快捷键只在 Compact 中生效。真实用户调用链和桌面视觉验收由提交者自行完成。
+本轮按 [维护者在 PR #769 的回复](https://github.com/STranslate/STranslate/pull/769#issuecomment-5536176286) 重构。Compact 工具条上的 Pin 按钮和用户自行配置的快捷键共用现有 Pin 命令；默认未设置，只在 Compact 中生效。真实用户调用链和桌面视觉验收由提交者自行完成。
 
 ## 基线与范围
 
@@ -16,7 +16,7 @@
 
 - .NET SDK：10.0.400，Windows x64。
 - Debug 和 Release 解决方案构建：通过；Release 0 警告、0 错误。Debug 使用上游的空 Fody 配置，产生一项 Costura 未配置的警告。
-- Release 测试：326 通过、0 失败、0 跳过；最终上游候选原有 274 项测试通过。另有 20 项实际 Compact 窗口绑定与命令断言通过，见快捷键验证说明。
+- Release 测试：326 通过、0 失败、0 跳过；最终上游候选原有 274 项测试通过。另有 24 项实际 Compact 窗口绑定与命令断言通过，见快捷键验证说明。
 - `git diff --check`：通过。语言资源保留上游文件换行，Git 检查按 CRLF 文件设置 `cr-at-eol`。
 - 新增/更新测试覆盖：旧配置单字段迁移、32/63/64 像素截图尺寸、快照与原选择数据隔离、当前显示层继承、无效快照拒绝、Unicode 选词、四种分段模式的完整段落、多栏隔离、软换行与裁剪文本、切层清除高亮、复制全文不改变选择，以及 100%/125%/150%/175%/200% DPI 几何、Chrome 状态参数与断屏后定位。
 

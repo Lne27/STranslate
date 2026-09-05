@@ -13,13 +13,13 @@ public class PinHotkeyTests
         var settings = new StorageBase<HotkeySettings>(file.Path).Load();
         settings.Initialize();
 
-        Assert.Equal("Ctrl + Shift + P", settings.PinImageTranslateHotkey.Key);
-        Assert.Equal("Ctrl + Shift + P", settings.PinImageTranslateHotkey.Default);
+        Assert.Equal(Constant.EmptyHotkey, settings.PinImageTranslateHotkey.Key);
+        Assert.Equal(Constant.EmptyHotkey, settings.PinImageTranslateHotkey.Default);
         Assert.Equal("Ctrl + F9", settings.SwitchImageHotkey.Key);
     }
 
     [Theory]
-    [InlineData("Ctrl + Alt + P")]
+    [InlineData("Ctrl + Alt + F8")]
     [InlineData("F8")]
     [InlineData(Constant.EmptyHotkey)]
     public void PinEditPersistsAndResetKeepsTheDeclaredDefault(string key)
@@ -34,10 +34,10 @@ public class PinHotkeyTests
         var reloaded = new StorageBase<HotkeySettings>(file.Path).Load();
         reloaded.Initialize();
         Assert.Equal(key, reloaded.PinImageTranslateHotkey.Key);
-        Assert.Equal("Ctrl + Shift + P", reloaded.PinImageTranslateHotkey.Default);
+        Assert.Equal(Constant.EmptyHotkey, reloaded.PinImageTranslateHotkey.Default);
 
         settings.PinImageTranslateHotkey.Key = settings.PinImageTranslateHotkey.Default;
-        Assert.Equal("Ctrl + Shift + P",
+        Assert.Equal(Constant.EmptyHotkey,
             new StorageBase<HotkeySettings>(file.Path).Load().PinImageTranslateHotkey.Key);
     }
 
@@ -45,6 +45,7 @@ public class PinHotkeyTests
     public void PinParticipatesInImageWindowAndGlobalConflictChecks()
     {
         var settings = new HotkeySettings();
+        settings.PinImageTranslateHotkey.Key = "Ctrl + Alt + F8";
         var pin = Assert.Single(settings.RegisteredHotkeys, item => item.ResourceKey == "Hotkey_PinImageTranslate");
         Assert.IsNotType<GlobalHotkey>(settings.PinImageTranslateHotkey);
         Assert.Equal(HotkeyType.ImageTransWindow, pin.Type);

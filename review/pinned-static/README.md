@@ -21,7 +21,7 @@ dotnet run --project review/pinned-static/PinnedPerf.csproj -c Release -p:Enable
 
 ## 外观与交互验证
 
-- 自动回归 326 项通过；最终上游候选原有测试 274 项通过。另有 20 项实际 Compact 窗口绑定与命令断言通过，见 [快捷键验证](pin-hotkey-validation.md)。
+- 自动回归 326 项通过；最终上游候选原有测试 274 项通过。另有 24 项实际 Compact 窗口绑定与命令断言通过，见 [快捷键验证](pin-hotkey-validation.md)。
 - 回归中有 168 组原绘制与新绘制的 BGRA 字节对比，覆盖 100% / 125% / 150% / 175% / 200% / 250% / 300% DPI、32×32 / 63×47 / 800×400 / 855×529 图片尺寸、阴影开关、激活/失焦反复切换及同对象改变尺寸，全部相等。
 - 独立测量程序另有 56 组逐像素比较，结果见 [chrome-pixels.jsonl](chrome-pixels.jsonl)。
 - 96 DPI 的可见透明 WPF 图窗中，左右并排检查原绘制与新绘制。桌面工具返回 JPEG，图形按相同 JPEG 块位置排列；解码后两区域差异为 0，记录见 [chrome-desktop-pixels.json](chrome-desktop-pixels.json)。无损逐像素判断使用上面的 RenderTargetBitmap 数据。

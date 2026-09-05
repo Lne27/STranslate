@@ -72,7 +72,7 @@ public partial class HotkeySettings : ObservableObject, IDisposable
 
     public Hotkey SwitchImageHotkey { get; set; } = new("Ctrl + OemQuestion");
 
-    public Hotkey PinImageTranslateHotkey { get; set; } = new("Ctrl + Shift + P");
+    public Hotkey PinImageTranslateHotkey { get; set; } = new(Constant.EmptyHotkey);
 
     #endregion
 
@@ -214,7 +214,7 @@ public partial class HotkeySettings : ObservableObject, IDisposable
             [nameof(ReExecuteOcrHotkey)] = "Ctrl + R",
             [nameof(QrCodeHotkey)] = "Ctrl + Shift + R",
             [nameof(SwitchImageHotkey)] = "Ctrl + OemQuestion",
-            [nameof(PinImageTranslateHotkey)] = "Ctrl + Shift + P",
+            [nameof(PinImageTranslateHotkey)] = Constant.EmptyHotkey,
         };
         foreach (var prop in GetType().GetProperties())
         {

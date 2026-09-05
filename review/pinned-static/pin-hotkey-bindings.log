@@ -1,21 +1,25 @@
+PASS: Test combination is unused by application defaults
+PASS: Ctrl + Alt + F8 passes the existing system availability check
 PASS: Compiled key binding shares Pin button command
-PASS: Default gesture
+PASS: No shortcut assigned by default
 PASS: Live custom gesture
 PASS: Cleared gesture
-PASS: Live reset
+PASS: Reset leaves shortcut unassigned
 PASS: Incomplete result rejects Pin
 PASS: Executing result rejects Pin
+PASS: Pin button remains enabled without a shortcut
 PASS: Completed result enables Pin
 PASS: Command bound to F8 creates exactly one static pin
 PASS: Compact releases bindings and content
 PASS: Compiled key binding shares Pin button command
-PASS: Default gesture
+PASS: No shortcut assigned by default
 PASS: Live custom gesture
 PASS: Cleared gesture
-PASS: Live reset
+PASS: Reset leaves shortcut unassigned
 PASS: Incomplete result rejects Pin
 PASS: Executing result rejects Pin
+PASS: Pin button remains enabled without a shortcut
 PASS: Completed result enables Pin
-PASS: Command bound to Ctrl + Shift + P creates exactly one static pin
+PASS: Command bound to Ctrl + Alt + F8 creates exactly one static pin
 PASS: Compact releases bindings and content
 PASS: all Compact hotkey checks completed.
