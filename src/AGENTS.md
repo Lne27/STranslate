@@ -28,6 +28,7 @@
 | 主翻译链路 | [docs/flow-main-translation.md](docs/flow-main-translation.md) | 自动翻译、防抖、缓存命中、回译、复制与词典路径 |
 | OCR 链路 | [docs/flow-ocr-image.md](docs/flow-ocr-image.md) | 截图翻译、静默 OCR、OCR窗口、坐标归一化 |
 | 图片翻译链路 | [docs/flow-image-translation.md](docs/flow-image-translation.md) | 专用 OCR/翻译服务、分段逻辑、译文覆盖、插件能力 |
+| Compact 贴图审阅 | [docs/pinned-image-review.md](docs/pinned-image-review.md) | 本轮范围、构建测试结果与用户验收清单 |
 | 输入与触发系统 | [docs/flow-input-trigger.md](docs/flow-input-trigger.md) | 全局/软件内热键、低级键盘钩子、Ctrl+CC、鼠标划词、剪贴板监听与触发后置前 |
 | 插件市场与管理 | [docs/plugin-market-management.md](docs/plugin-market-management.md) | 已安装插件管理、市场加载、下载/取消/升级/重启策略 |
 | 配置、存储与历史 | [docs/config-storage-history.md](docs/config-storage-history.md) | Settings/ServiceSettings、存储抽象、便携/漫游路径、历史记录 |

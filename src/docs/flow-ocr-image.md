@@ -18,6 +18,10 @@
   - `GetScreenshotAsync()`：截图前隐藏主窗口，调用 `ScreenGrabber`。
 - `STranslate/Core/OcrWordBuilder.cs`
   - 把带坐标的 `OcrContent` 转成图片文本选中所需的 `OcrWord`。
+- `STranslate/Core/QrCodeDecoder.cs`
+  - 本地二维码解码，并限制可直接打开的链接协议为 `http` / `https`。
+- `STranslate/Helpers/QrCodeOverlayBuilder.cs`
+  - 根据二维码定位点生成与原图坐标一致的内容覆盖层，并处理边界扩展与长文本截断。
 - `STranslate/Core/Utilities.cs`
   - `PrepareOcrResult()`：当结构化 OCR 没有扁平内容时投影出 `OcrContents`。
 - `STranslate.Plugin/IOcrPlugin.cs`
@@ -41,12 +45,15 @@
 
 ### OCR 窗口执行
 1. `OcrWindowViewModel.ExecuteAsync(bitmap)` 设置执行态并清理旧结果。
-2. 调用当前启用的 OCR 服务：
+2. 并行执行 OCR 服务和本地二维码解码。
+3. 调用当前启用的 OCR 服务：
    `RecognizeAsync(new OcrRequest(data, Settings.OcrWindowOcrLanguage, bitmap.Width, bitmap.Height))`。
-3. OCR 返回后调用 `Utilities.PrepareOcrResult()`；如果插件只填充结构化 `Regions`，宿主会投影出兼容的 `OcrContents`。
-4. 生成原图/标注图、`OcrWords` 和 `Result` 文本。
-5. `Settings.IsOcrShowingAnnotated` 决定显示原图还是标注图。
-6. “保存图片”捕获命令触发时的 `DisplayImage`，因此原图模式保存原图，标注模式保存当前 OCR 标注图；窗口缩放和文字选择高亮不会进入结果。
+4. OCR 返回后调用 `Utilities.PrepareOcrResult()`；如果插件只填充结构化 `Regions`，宿主会投影出兼容的 `OcrContents`。
+5. 生成原图/标注图、`OcrWords` 和 `Result` 文本；二维码命中不会自动展开右侧结果面板，面板显示仍由 `Settings.IsOcrShowingTextControl` 控制；手动打开后可复制完整内容，`http` / `https` 内容还可直接打开。
+   同时会在二维码坐标区域显示随图片缩放的矢量内容覆盖层；覆盖文本可使用图片文本选择交互复制，最多显示 80 个 Unicode 文本元素，完整内容不受影响。
+6. 纯二维码截图同样视为识别成功，不显示误导性的 OCR 失败提示；只有 OCR 和二维码均无结果时才提示失败。
+7. `Settings.IsOcrShowingAnnotated` 决定显示原图还是标注图。
+8. “保存图片”捕获命令触发时的 `DisplayImage`，因此原图模式保存原图，标注模式保存当前 OCR 标注图；窗口缩放和文字选择高亮不会进入结果。
 
 ## OCR 结果模型
 - `OcrResult.OcrContents`：兼容旧插件的扁平 OCR 文本块列表。
@@ -91,6 +98,8 @@
 - `STranslate/ViewModels/OcrWindowViewModel.cs`
 - `STranslate/Core/Screenshot.cs`
 - `STranslate/Core/OcrWordBuilder.cs`
+- `STranslate/Core/QrCodeDecoder.cs`
+- `STranslate/Helpers/QrCodeOverlayBuilder.cs`
 - `STranslate/Core/Utilities.cs`
 - `STranslate/Helpers/ModernWindowLifecycle.cs`
 - `STranslate.Plugin/IOcrPlugin.cs`

@@ -60,7 +60,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly Dictionary<string, CancellationTokenSource> _manualTranslationTaskTokens = [];
     private readonly SemaphoreSlim _manualTranslationHistoryLock = new(1, 1);
     private readonly TranslationResultCoordinator _translationCoordinator;
-    private readonly PinnedWindowController _pinnedWindowController;
 
     public Settings Settings { get; }
     public HotkeySettings HotkeySettings { get; }
@@ -81,8 +80,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         Settings settings,
         HotkeySettings hotkeySettings,
         MouseSelectionService mouseSelectionService,
-        MouseSelectionIconWindow mouseSelectionIconWindow,
-        PinnedWindowController pinnedWindowController)
+        MouseSelectionIconWindow mouseSelectionIconWindow)
     {
         DataProvider = dataProvider;
         IdentifiedLanguageOptions = DataProvider.LangEnums
@@ -105,7 +103,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         HotkeySettings = hotkeySettings;
         _mouseSelectionService = mouseSelectionService;
         _mouseSelectionIconWindow = mouseSelectionIconWindow;
-        _pinnedWindowController = pinnedWindowController;
         _mouseSelectionService.TextSelected += OnMouseSelectionTextSelected;
         _mouseSelectionService.IncrementalTextSelected += OnIncrementalMouseTextSelected;
         _mouseSelectionService.SelectionStarted += OnMouseSelectionStarted;
@@ -1267,31 +1264,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (ocrPlugin == null)
             return;
 
-        if (Settings.ImageTranslateWindowMode == ImageTranslateWindowMode.Pinned)
-        {
-            // Pinned 只接受与截图尺寸一致的可信物理选区。
-            if (physicalBounds is { Width: > 0, Height: > 0 } bounds &&
-                bounds.Width == bitmap.Width && bounds.Height == bitmap.Height)
-            {
-                // 使用同一份无损 PNG 作为显示源和 OCR payload。
-                var payload = Utilities.ToBytes(bitmap);
-                var source = new PinnedImageTranslateSource(
-                    Utilities.ToBitmapImage(payload),
-                    payload,
-                    bitmap.Width,
-                    bitmap.Height,
-                    bounds);
-                _pinnedWindowController.CreateWindow(source);
-                return;
-            }
-
-            _logger.LogWarning(
-                "Pinned image translate requires exact physical bounds; falling back to standalone. Bitmap={Width}x{Height}, Bounds={Bounds}",
-                bitmap.Width,
-                bitmap.Height,
-                physicalBounds);
-        }
-
         if (Settings.ImageTranslateWindowMode == ImageTranslateWindowMode.Compact)
         {
             Task? executeTask = null;
@@ -2041,7 +2013,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 ToggleGlobalHotkey();
                 break;
             case DoubleClickTrayFunction.Exit:
-                Exit();
+                Exit(AppShutdownReason.TrayDoubleClick);
                 break;
             default:
                 break;
@@ -2148,7 +2120,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void Exit() => Application.Current.Shutdown();
+    private void Exit(AppShutdownReason reason) => App.RequestShutdown(reason);
 
     #endregion
 

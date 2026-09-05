@@ -97,12 +97,7 @@ public class Main : IOcrPlugin
         var timeoutTask = Task.Delay(10000, cancellationToken);
         var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
 
-        if (completedTask == timeoutTask)
-        {
-            // 区分调用方取消与真实超时。
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new TimeoutException("WeChatOCR operation timed out.");
-        }
+        if (completedTask == timeoutTask) throw new TimeoutException("WeChatOCR operation timed out.");
         // 提取content的值
         var finalResult = await tcs.Task;
 

@@ -1,141 +1,91 @@
 using STranslate.Helpers;
+using STranslate.Plugin;
 using STranslate.Views;
 using System.Windows;
+using System.Windows.Media.Imaging;
+using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace STranslate.Core;
 
-/// <summary>
-/// 管理 Pinned 窗口集合与截图期间的 Cloak 事务。
-/// </summary>
-public sealed class PinnedWindowController
+/// <summary>只在 UI 线程管理静态贴图及截图避让，不参与 OCR 或翻译。</summary>
+public sealed class PinnedWindowController(Settings settings, Internationalization i18n, ISnackbar snackbar)
 {
-    private readonly SemaphoreSlim _captureGate = new(1, 1);
     private readonly HashSet<PinnedImageTranslateWindow> _windows = [];
-    private readonly HashSet<PinnedImageTranslateWindow> _captureCloakedWindows = [];
-    private readonly object _syncRoot = new();
+    private readonly SemaphoreSlim _captureGate = new(1, 1);
     private bool _captureActive;
 
-    internal PinnedImageTranslateWindow CreateWindow(PinnedImageTranslateSource source)
+    internal bool ShowShadow
     {
-        if (!Application.Current.Dispatcher.CheckAccess())
-            return Application.Current.Dispatcher.Invoke(() => CreateWindow(source));
+        get => settings.PinnedImageTranslateShowShadow;
+        set => settings.PinnedImageTranslateShowShadow = value;
+    }
 
-        var window = new PinnedImageTranslateWindow(this);
-        Register(window);
+    internal void CopyText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
         try
         {
-            window.Initialize(source);
+            Clipboard.SetText(text);
+        }
+        catch (System.Runtime.InteropServices.ExternalException ex)
+        {
+            snackbar.ShowError($"{i18n.GetTranslation("CopyFailed")}: {ex.Message}");
+        }
+    }
+
+    internal PinnedImageTranslateWindow CreateWindow(PinnedImageTranslateSnapshot snapshot)
+    {
+        Application.Current.Dispatcher.VerifyAccess();
+        var window = new PinnedImageTranslateWindow(this);
+        _windows.Add(window);
+        try
+        {
+            window.Initialize(snapshot, ShowShadow);
             window.Show();
-            window.Activate();
+            if (!_captureActive)
+                window.Activate();
             return window;
         }
         catch
         {
-            Unregister(window);
-            try
-            {
-                window.Close();
-            }
-            catch
-            {
-                // 保留原始创建异常。
-            }
+            window.Close();
             throw;
         }
     }
 
-    internal void Register(PinnedImageTranslateWindow window)
-    {
-        lock (_syncRoot)
-            _windows.Add(window);
-    }
-
-    internal void Unregister(PinnedImageTranslateWindow window)
-    {
-        lock (_syncRoot)
-            _windows.Remove(window);
-    }
+    internal void Unregister(PinnedImageTranslateWindow window) => _windows.Remove(window);
 
     internal void OnWindowSourceInitialized(PinnedImageTranslateWindow window)
     {
-        bool shouldCloak;
-        lock (_syncRoot)
-        {
-            shouldCloak = _captureActive && _windows.Contains(window);
-            if (shouldCloak)
-                _captureCloakedWindows.Add(window);
-        }
-
-        if (!shouldCloak)
-            return;
-
-        window.CloseTransientUiForCapture();
-        if (!window.SetCaptureCloaked(cloaked: true))
-            throw new InvalidOperationException("Failed to cloak a pinned image-translate window created during capture.");
+        if (_captureActive && !window.SetCaptureCloaked(true))
+            throw new InvalidOperationException("Failed to cloak a pinned window during capture.");
     }
 
-    /// <summary>
-    /// 截图期间用 DWM Cloak 隐藏所有 Pinned 窗口。
-    /// </summary>
-    internal async ValueTask<IAsyncDisposable> BeginCaptureAsync(CancellationToken cancellationToken = default)
+    internal async ValueTask<IAsyncDisposable?> BeginCaptureAsync(CancellationToken cancellationToken = default)
     {
-        await _captureGate.WaitAsync(cancellationToken);
+        // 同一截图尚未结束时忽略重复触发，不把旧输入排队成下一次截图。
+        if (!await _captureGate.WaitAsync(0, cancellationToken))
+            return null;
         try
         {
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                List<PinnedImageTranslateWindow> snapshot;
-                lock (_syncRoot)
-                {
-                    _captureActive = true;
-                    _captureCloakedWindows.Clear();
-                    snapshot = _windows.Where(window => window.IsVisible).ToList();
-                    foreach (var window in snapshot)
-                        _captureCloakedWindows.Add(window);
-                }
-
-                foreach (var window in snapshot)
+                _captureActive = true;
+                foreach (var window in _windows)
                 {
                     window.CloseTransientUiForCapture();
-                    if (!window.SetCaptureCloaked(cloaked: true))
-                        throw new InvalidOperationException("Failed to cloak a pinned image-translate window before capture.");
+                    if (!window.SetCaptureCloaked(true))
+                        throw new InvalidOperationException("Failed to cloak a pinned window before capture.");
                 }
-
-                Win32Helper.FlushDesktopComposition();
+                if (_windows.Count > 0)
+                    Win32Helper.FlushDesktopComposition();
             });
-
             return new CaptureLease(this);
         }
         catch
         {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                PinnedImageTranslateWindow[] rollbackWindows;
-                lock (_syncRoot)
-                    rollbackWindows = _captureCloakedWindows.ToArray();
-
-                foreach (var window in rollbackWindows)
-                {
-                    bool stillRegistered;
-                    lock (_syncRoot)
-                        stillRegistered = _windows.Contains(window);
-
-                    if (stillRegistered)
-                    {
-                        window.SetCaptureCloaked(cloaked: false);
-                        window.RestoreTransientUiAfterCapture();
-                    }
-                }
-
-                lock (_syncRoot)
-                {
-                    _captureActive = false;
-                    _captureCloakedWindows.Clear();
-                }
-
-                Win32Helper.FlushDesktopComposition();
-            });
-            _captureGate.Release();
+            await EndCaptureAsync();
             throw;
         }
     }
@@ -147,12 +97,7 @@ public sealed class PinnedWindowController
             Application.Current.Dispatcher.Invoke(CloseAll);
             return;
         }
-
-        PinnedImageTranslateWindow[] windows;
-        lock (_syncRoot)
-            windows = _windows.ToArray();
-
-        foreach (var window in windows)
+        foreach (var window in _windows.ToArray())
             window.Close();
     }
 
@@ -162,30 +107,14 @@ public sealed class PinnedWindowController
         {
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                PinnedImageTranslateWindow[] windowsToUncloak;
-                lock (_syncRoot)
-                    windowsToUncloak = _captureCloakedWindows.ToArray();
-
-                foreach (var window in windowsToUncloak)
-                {
-                    bool stillRegistered;
-                    lock (_syncRoot)
-                        stillRegistered = _windows.Contains(window);
-
-                    if (stillRegistered)
-                    {
-                        window.SetCaptureCloaked(cloaked: false);
-                        window.RestoreTransientUiAfterCapture();
-                    }
-                }
-
-                lock (_syncRoot)
-                {
-                    _captureActive = false;
-                    _captureCloakedWindows.Clear();
-                }
-
-                Win32Helper.FlushDesktopComposition();
+                _captureActive = false;
+                var restored = true;
+                foreach (var window in _windows)
+                    restored &= window.SetCaptureCloaked(false);
+                if (_windows.Count > 0)
+                    Win32Helper.FlushDesktopComposition();
+                if (!restored)
+                    throw new InvalidOperationException("Failed to restore pinned windows after capture.");
             });
         }
         finally
@@ -200,9 +129,42 @@ public sealed class PinnedWindowController
 
         public async ValueTask DisposeAsync()
         {
-            var currentOwner = Interlocked.Exchange(ref _owner, null);
-            if (currentOwner != null)
-                await currentOwner.EndCaptureAsync();
+            if (Interlocked.Exchange(ref _owner, null) is { } current)
+                await current.EndCaptureAsync();
         }
     }
+}
+
+/// <summary>已生成结果的独立显示快照；图片冻结，选择数据逐项复制。</summary>
+internal sealed record PinnedImageTranslateSnapshot(
+    BitmapSource SourceImage,
+    BitmapSource AnnotatedImage,
+    ImageTranslateOverlayDocument TranslationOverlay,
+    IReadOnlyList<OcrWord> OriginalWords,
+    IReadOnlyList<OcrWord> TranslatedWords,
+    DrawingRectangle PhysicalBounds)
+{
+    internal static PinnedImageTranslateSnapshot Create(
+        BitmapSource source, BitmapSource annotated, ImageTranslateOverlayDocument overlay,
+        IReadOnlyList<OcrWord> originalWords, IReadOnlyList<OcrWord> translatedWords,
+        DrawingRectangle bounds)
+    {
+        if (bounds.Width <= 0 || bounds.Height <= 0 ||
+            source.PixelWidth != bounds.Width || source.PixelHeight != bounds.Height ||
+            annotated.PixelWidth != bounds.Width || annotated.PixelHeight != bounds.Height ||
+            !source.IsFrozen || !annotated.IsFrozen || overlay.IsEmpty)
+            throw new ArgumentException("Pin requires a frozen, completed result matching the physical image bounds.");
+
+        return new(source, annotated, new ImageTranslateOverlayDocument(overlay.Items.ToArray(), []),
+            CloneWords(originalWords), CloneWords(translatedWords), bounds);
+    }
+
+    private static IReadOnlyList<OcrWord> CloneWords(IReadOnlyList<OcrWord> words) =>
+        Array.AsReadOnly(words.Select(word => new OcrWord
+        {
+            Text = word.Text,
+            BoundingBox = word.BoundingBox,
+            StartIndexInFullText = word.StartIndexInFullText,
+            VisualLineIndex = word.VisualLineIndex,
+        }).ToArray());
 }

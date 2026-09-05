@@ -104,7 +104,22 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
     public partial bool IsShowingFitToWindow { get; set; } = false;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanPin))]
     public partial bool IsExecuting { get; set; } = false;
+
+    public bool CanPin => !IsExecuting && !_disposed &&
+        _sourceImage != null && _annotatedImage != null && _resultOverlayDocument is { IsEmpty: false };
+    internal BitmapSource? SourceImage => _sourceImage;
+    internal BitmapSource? AnnotatedImage => _annotatedImage;
+    internal ImageTranslateOverlayDocument? ResultOverlay => _resultOverlayDocument;
+    internal IReadOnlyList<OcrWord> OriginalSelectionWords => _originalSelectionWords;
+    internal IReadOnlyList<OcrWord> TranslatedSelectionWords => _translatedSelectionWords;
+
+    internal void ReportPinFailure(Exception exception)
+    {
+        _logger.LogError(exception, "Failed to pin image translation");
+        _snackbar.ShowError($"{_i18n.GetTranslation("ImageTranslatePinFailed")}: {exception.Message}");
+    }
 
     [ObservableProperty]
     public partial string ProcessRingText { get; set; } = string.Empty;
@@ -184,6 +199,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
             _lastOcrResult = await ocrSvc.RecognizeAsync(
                 new OcrRequest(data, Settings.ImageTranslateOcrLanguage, bitmap.Width, bitmap.Height),
                 cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             Utilities.PrepareOcrResult(_lastOcrResult);
 
             if (!_lastOcrResult.IsSuccess || string.IsNullOrEmpty(_lastOcrResult.Text))
@@ -260,6 +276,8 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
                 }
             });
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             _lastOcrResult.OcrContents.Clear();
             _lastOcrResult.OcrContents.AddRange(layoutBlocks.Select(x => x.ToOcrContent()));
 
@@ -272,7 +290,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
 
             RefreshDisplayState();
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             //TODO: 考虑提示用户取消操作
         }
@@ -660,6 +678,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
         _originalSelectionWords = [];
         _translatedSelectionWords = [];
         OcrWords = [];
+        OnPropertyChanged(nameof(CanPin));
     }
 
     private void RefreshSelectableOcrWords()

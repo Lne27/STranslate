@@ -27,7 +27,7 @@ public class Screenshot(Settings settings, PinnedWindowController pinnedWindowCo
     {
         await using var captureScope = await pinnedWindowController.BeginCaptureAsync();
 
-        if (ScreenGrabber.IsCapturing)
+        if (captureScope == null || ScreenGrabber.IsCapturing)
             return default;
 
         if (App.Current.MainWindow.Visibility == Visibility.Visible &&
@@ -53,13 +53,13 @@ public class Screenshot(Settings settings, PinnedWindowController pinnedWindowCo
     }
 
     internal static bool ShouldPadImage(ImageTranslateWindowMode mode) =>
-        mode is not (ImageTranslateWindowMode.Compact or ImageTranslateWindowMode.Pinned);
+        mode != ImageTranslateWindowMode.Compact;
 
     private async Task<Bitmap?> CaptureBitmapAsync()
     {
         await using var captureScope = await pinnedWindowController.BeginCaptureAsync();
 
-        if (ScreenGrabber.IsCapturing)
+        if (captureScope == null || ScreenGrabber.IsCapturing)
             return default;
 
         if (App.Current.MainWindow.Visibility == Visibility.Visible &&

@@ -595,6 +595,46 @@ public class ImageZoom : Control
     /// </summary>
     public void ClearTextSelection() => ResetSelection();
 
+    internal bool IsPointOverTextSelection(Point point)
+    {
+        if (_interactionCanvas == null || _selectionStartIndex == null || _selectionEndIndex == null)
+            return false;
+        var word = FindWordAtPoint(TranslatePoint(point, _interactionCanvas));
+        return word != null && IsWordInSelection(word,
+            Math.Min(_selectionStartIndex.Value, _selectionEndIndex.Value),
+            Math.Max(_selectionStartIndex.Value, _selectionEndIndex.Value));
+    }
+
+    // Pinned 在 Preview 事件中调用；其他 ImageZoom 保留原有的双击选行行为。
+    internal void SelectTextAtPoint(Point point, bool selectVisualLine)
+    {
+        if (_interactionCanvas == null)
+            return;
+        var canvasPoint = TranslatePoint(point, _interactionCanvas);
+        var word = FindWordAtPoint(canvasPoint);
+        if (word == null)
+            return;
+        if (selectVisualLine)
+        {
+            SelectVisualLineAtPoint(canvasPoint);
+            return;
+        }
+        if (OcrWordSelection.TryGetWordRange(GetFullText(), CalculateCharacterIndexInWord(word, canvasPoint),
+                out var start, out var end))
+        {
+            // 独立覆盖块的逻辑文本可能直接相连，选词不能越过当前视觉段。
+            if (OcrWordSelection.TryGetVisualLineRange(OcrWords, word, out var lineStart, out var lineEnd))
+            {
+                start = Math.Max(start, lineStart);
+                end = Math.Min(end, lineEnd);
+            }
+            _isSelecting = false;
+            _selectionStartIndex = start;
+            _selectionEndIndex = end;
+            UpdateSelectionHighlight();
+        }
+    }
+
     private bool SelectVisualLineAtPoint(Point point)
     {
         var anchorWord = FindWordAtPoint(point);
@@ -1094,7 +1134,7 @@ public class ImageZoom : Control
         UpdateSelectionHighlight();
     }
 
-    private string GetFullText()
+    internal string GetFullText()
     {
         if (_fullTextCache != null)
             return _fullTextCache;

@@ -60,6 +60,20 @@
 - 精简窗口按 `Esc`、点击窗口外部或再次触发图片翻译关闭；右键菜单、由菜单打开的保存对话框和窗口内部文字选择不会触发外部关闭。
 - 精简窗口不显示右侧文本框，`Settings.IsImTranShowingTextControl` 只影响独立窗口。
 
+## Compact 结果贴图
+
+- 用户入口仍只有 `Standalone` / `Compact`。Compact 工具条新增一个 Pin 按钮；不新增全局热键、快捷键配置或窗口内 Pin 快捷键。
+- `ImageTranslateWindowViewModel.CanPin` 只在执行结束且原图、标注图、非空译文覆盖层均存在时为真。生成结果和修改服务/语言/分段仍由原 Compact 链路负责。
+- `ImageTranslateCompactWindow` 保存截图原始物理矩形。点击 Pin 时导出冻结图片、矢量覆盖层和深复制的原文/译文选择数据；创建贴图成功后才关闭 Compact，失败则保留当前结果并提示。
+- `PinnedImageTranslateWindow` 没有工具条、ViewModel、服务、设置订阅或后台任务。多个贴图独立显示，不随 Compact 后续执行、服务删除或设置变化重新计算。
+- 译文层显示原始截图和原覆盖层；原图层保留红框标注图。单击清除旧选择并可拖选，双击选择当前视觉段内的词，三击选择同一 `VisualLineIndex` 的连续文本；其他 `ImageZoom` 界面保留上游双击选行行为。
+- 右键基础菜单为“复制全文、显示原图/译文、窗口阴影、关闭”。右键命中当前高亮时额外显示“复制”；复制全文不制造全选高亮，切层清除旧选择。原有 `Ctrl+A/C`、Esc、空白拖动/双击关闭和方向键移动继续作用于当前贴图。
+- Chrome 伴随窗沿用 PR #769 的 10 DIP 外扩、非激活黑影（8 / 0.36 / Performance）和激活蓝光（`#4D90FE`、6 / 0.42 / Quality）。阴影关闭只影响非激活黑影，当前窗口切换值写入设置供以后新窗使用。
+- 两个异步截图入口通过 `PinnedWindowController` 成对 cloak / uncloak 内容窗与 Chrome。截图期间的新 Chrome HWND 先应用 cloak 再显示；重复截图输入不排队。
+- 旧预览版保存的 `ImageTranslateWindowMode=pinned`（或数值 2）单字段迁移为 `Compact`，不保留第三模式。
+
+本次审阅范围与构建结果见 [贴图审阅说明](pinned-image-review.md)。
+
 ## 分段模式
 - `Auto`：默认模式。OCR 返回结构化 `Regions` 时使用 Provider 段落；没有结构化分段时回退 `Smart`。
 - `Provider`：只使用服务商结构化 `Regions -> Paragraphs -> Lines`；缺失结构化分段时退化为 `NoMerge`，不自行猜段落。
@@ -132,7 +146,7 @@
 - 图片翻译翻译服务未配置：窗口内 `_snackbar.ShowWarning("NoTranslateService")`。
 - OCR 失败、翻译异常或运行时异常：窗口内 Snackbar 提示，日志写入 `ImageTranslateWindowViewModel` logger。
 - 语言检测失败：当前 block 跳过翻译并提示 `LanguageDetectionFailed`。
-- 用户取消执行：捕获 `TaskCanceledException`，当前实现不额外弹提示。
+- 用户取消执行：捕获当前取消令牌对应的 `OperationCanceledException`，不发布取消后的结果或额外弹提示。
 
 ## 内存与生命周期
 图片翻译窗口的内存释放主要涉及窗口视觉树、消息提示控件和 ViewModel 所有权。精简窗口与独立窗口都使用独立 DI scope，并在关闭时显式拆解各自的长生命周期持有链：

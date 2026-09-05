@@ -29,6 +29,7 @@
     <sys:String x:Key="TimeoutPlaceholder">Timeout (seconds)</sys:String>
     <sys:String x:Key="SearchFunction">Search Function</sys:String>
     <sys:String x:Key="SearchFunctionToolTip">Ctrl+F to search function</sys:String>
+    <sys:String x:Key="NoResultsFound">No results found</sys:String>
     <sys:String x:Key="Function">Function</sys:String>
     <sys:String x:Key="Appearance">Appearance</sys:String>
     <sys:String x:Key="AutoTranslateEnabled">Enable Auto-Translate</sys:String>
@@ -316,6 +317,11 @@
     <sys:String x:Key="Network_HelpBypassListContent" xml:space="preserve">Use semicolons (;) to separate multiple addresses, supports wildcards (*):&#10;localhost;127.*;10.*;192.168.*;*.example.com</sys:String>
     <sys:String x:Key="Network_HelpEffectiveness">Effectiveness</sys:String>
     <sys:String x:Key="Network_HelpEffectivenessContent" xml:space="preserve">Changes to proxy settings take effect after 2 minutes&#10;Apply immediately need restart</sys:String>
+    <sys:String x:Key="ProxyTesting">Testing connection...</sys:String>
+    <sys:String x:Key="ProxyTestSuccess">Connection successful! Current IP info: {0}</sys:String>
+    <sys:String x:Key="ProxyTestFailed">Connection failed, please check the proxy settings</sys:String>
+    <sys:String x:Key="ProxyTestError">Test failed: {0}</sys:String>
+    <sys:String x:Key="ExternalCallStartFailed">Failed to start the service, please reconfigure the port: {0}</sys:String>
 
     <!--  Standalone Page  -->
     <sys:String x:Key="Standalone_OcrShowAnnotationHeader">Show Annotation</sys:String>
@@ -329,7 +335,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">Show Text Panel</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">Show or hide the text panel on the right side.</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">Image Translation Window Mode</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">Choose whether image translation results open in the standalone window, compact floating window, or pinned in-place window.</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">Choose whether image translation results open in the standalone window or compact floating window.</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">Image Translation OCR Language</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">Recognition language used during image translation OCR.</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">Show Recognition Language in Compact Window</sys:String>
@@ -585,6 +591,7 @@
     <sys:String x:Key="LangEnumDutch">Dutch</sys:String>
     <sys:String x:Key="LangEnumUkrainian">Ukrainian</sys:String>
     <sys:String x:Key="LangEnumUzbek">Uzbek</sys:String>
+    <sys:String x:Key="LangEnumUyghur">Uyghur</sys:String>
 
     <sys:String x:Key="LanguageDetectorTypeLocal">Local Detection</sys:String>
     <sys:String x:Key="LanguageDetectorTypeBaidu">Baidu Detection</sys:String>
@@ -638,12 +645,6 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">No merge</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">Standalone window</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">Compact window</sys:String>
-    <sys:String x:Key="ImageTranslateWindowModePinned">Pinned window</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedShowToolbar">Show toolbar</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedHideToolbar">Hide toolbar</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedWindowShadow">Window shadow</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedPartialFailure">{0} text block(s) failed to translate; the original text was kept.</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">Update failed; the previous successful result is still displayed. {0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">RememberLastLaunchLocation</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">Cursor</sys:String>
@@ -712,6 +713,9 @@
     <sys:String x:Key="SelectPluginFile">Select Plugin File</sys:String>
     <sys:String x:Key="PluginInstallFailed">Plugin installation failed</sys:String>
     <sys:String x:Key="PluginInstallSuccess">Plugin installation success</sys:String>
+    <sys:String x:Key="PluginVersionParseFailed">Unable to parse plugin version: {0}</sys:String>
+    <sys:String x:Key="PluginVersionTooOld">Plugin version is too old: {0} v{1}, the installed version is v{2}.</sys:String>
+    <sys:String x:Key="PluginUpgradeAvailable">You can upgrade to the new version (v{0}).</sys:String>
     <sys:String x:Key="PluginDeleteConfirm" xml:space="preserve">Developer: {0}&#10;Version: {1}&#10;Are you sure you want to delete the plugin "{2}"?</sys:String>
     <sys:String x:Key="PluginDeleteFailed">Failed to delete the plugin</sys:String>
     <sys:String x:Key="PluginDeleteForRestart">The plugin has been marked for deletion. Restart to take effect.</sys:String>
@@ -744,6 +748,12 @@
     <sys:String x:Key="BuiltIn">Built-in</sys:String>
     <sys:String x:Key="PreInstall">Pre-installed</sys:String>
     <sys:String x:Key="Extend">Extension</sys:String>
+    <sys:String x:Key="AddTranslationService">Add Translation Service</sys:String>
+    <sys:String x:Key="AddOcrService">Add OCR Service</sys:String>
+    <sys:String x:Key="AddTtsService">Add TTS Service</sys:String>
+    <sys:String x:Key="AddVocabularyService">Add Vocabulary Service</sys:String>
+    <sys:String x:Key="AddService">Add Service</sys:String>
+    <sys:String x:Key="DictionaryServiceNotSupportReplace">Dictionary services do not support the replace feature.</sys:String>
 
     <!--  // Dictionary //  -->
     <sys:String x:Key="PlayPronunciation">Play Pronunciation</sys:String>
@@ -858,4 +868,10 @@
     <sys:String x:Key="EditPrompt_Content">Edit</sys:String>
     <sys:String x:Key="Temperature">Temperature Control</sys:String>
     <sys:String x:Key="Temperature_Description">Controls the randomness of the model's output</sys:String>
+    <sys:String x:Key="ImageTranslatePin">Pin</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">Could not pin the result</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">Copy all text</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">Show original image</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">Show translation</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">Window shadow</sys:String>
 </ResourceDictionary>

@@ -23,6 +23,7 @@ internal sealed class PinnedImageTranslateChromeWindow : Window
     private bool _isShadowEnabled = true;
     private bool _sourceInitialized;
     private bool _isClosed;
+    private bool _captureCloaked;
 
     internal PinnedImageTranslateChromeWindow()
     {
@@ -82,6 +83,8 @@ internal sealed class PinnedImageTranslateChromeWindow : Window
         _sourceInitialized = true;
         Win32Helper.HideFromAltTab(this);
         Win32Helper.ConfigureClickThroughNoActivate(this);
+        if (_captureCloaked && !Win32Helper.SetWindowCloaked(this, true))
+            throw new InvalidOperationException("Failed to cloak the pinned window chrome during capture.");
     }
 
     protected override void OnClosed(EventArgs e)
@@ -154,7 +157,10 @@ internal sealed class PinnedImageTranslateChromeWindow : Window
     }
 
     internal bool SetCloaked(bool cloaked)
-        => _isClosed || !_sourceInitialized || Win32Helper.SetWindowCloaked(this, cloaked);
+    {
+        _captureCloaked = cloaked;
+        return _isClosed || !_sourceInitialized || Win32Helper.SetWindowCloaked(this, cloaked);
+    }
 
     internal void HideForOwnerClosing()
     {

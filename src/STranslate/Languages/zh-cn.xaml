@@ -29,6 +29,7 @@
     <sys:String x:Key="TimeoutPlaceholder">超时时间（秒）</sys:String>
     <sys:String x:Key="SearchFunction">搜索功能</sys:String>
     <sys:String x:Key="SearchFunctionToolTip">按 Ctrl+F 搜索功能</sys:String>
+    <sys:String x:Key="NoResultsFound">未找到结果</sys:String>
     <sys:String x:Key="Function">功能</sys:String>
     <sys:String x:Key="Appearance">外观</sys:String>
     <sys:String x:Key="AutoTranslateEnabled">启用自动翻译</sys:String>
@@ -316,6 +317,11 @@
     <sys:String x:Key="Network_HelpBypassListContent" xml:space="preserve">使用分号(;)分隔多个地址，支持通配符(*)：&#10;localhost;127.*;10.*;192.168.*;*.example.com</sys:String>
     <sys:String x:Key="Network_HelpEffectiveness">生效说明</sys:String>
     <sys:String x:Key="Network_HelpEffectivenessContent" xml:space="preserve">修改代理配置需等待 2 分钟后生效&#10;立即生效需重启</sys:String>
+    <sys:String x:Key="ProxyTesting">正在测试连接...</sys:String>
+    <sys:String x:Key="ProxyTestSuccess">连接成功！当前IP信息：{0}</sys:String>
+    <sys:String x:Key="ProxyTestFailed">连接失败，请检查代理设置</sys:String>
+    <sys:String x:Key="ProxyTestError">测试失败：{0}</sys:String>
+    <sys:String x:Key="ExternalCallStartFailed">启动服务失败请重新配置端口: {0}</sys:String>
 
     <!--  Standalone Page  -->
     <sys:String x:Key="Standalone_OcrShowAnnotationHeader">显示文本检测结果</sys:String>
@@ -329,7 +335,7 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">显示文本框</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">显示/隐藏右侧文本框</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">图片翻译窗口模式</sys:String>
-    <sys:String x:Key="Standalone_ImTranWindowModeDescription">选择图片翻译结果使用独立窗口、精简悬浮窗口或原位贴图窗口显示</sys:String>
+    <sys:String x:Key="Standalone_ImTranWindowModeDescription">选择图片翻译结果使用独立窗口或精简悬浮窗口显示</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">图片翻译 OCR 识别语言</sys:String>
     <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">图片翻译 OCR 阶段使用的识别语言。</sys:String>
     <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">精简窗口显示识别语言</sys:String>
@@ -586,6 +592,7 @@
     <sys:String x:Key="LangEnumDutch">荷兰语</sys:String>
     <sys:String x:Key="LangEnumUkrainian">乌克兰语</sys:String>
     <sys:String x:Key="LangEnumUzbek">乌兹别克语</sys:String>
+    <sys:String x:Key="LangEnumUyghur">维吾尔语</sys:String>
 
     <sys:String x:Key="LanguageDetectorTypeLocal">本地识别</sys:String>
     <sys:String x:Key="LanguageDetectorTypeBaidu">百度识别</sys:String>
@@ -639,12 +646,6 @@
     <sys:String x:Key="LayoutAnalysisModeNoMerge">不合并</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeStandalone">独立窗口</sys:String>
     <sys:String x:Key="ImageTranslateWindowModeCompact">精简窗口</sys:String>
-    <sys:String x:Key="ImageTranslateWindowModePinned">贴图窗口</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedShowToolbar">显示工具条</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedHideToolbar">隐藏工具条</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedWindowShadow">窗口阴影</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedPartialFailure">{0} 个文本块翻译失败，已保留对应原文。</sys:String>
-    <sys:String x:Key="ImageTranslatePinnedUpdateFailedPreviousResult">更新失败，仍显示上一次成功结果。{0}</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">记住上次的位置</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">鼠标光标所在显示器</sys:String>
@@ -713,6 +714,9 @@
     <sys:String x:Key="SelectPluginFile">选择插件文件</sys:String>
     <sys:String x:Key="PluginInstallFailed">插件安装失败</sys:String>
     <sys:String x:Key="PluginInstallSuccess">插件安装成功</sys:String>
+    <sys:String x:Key="PluginVersionParseFailed">无法解析插件版本: {0}</sys:String>
+    <sys:String x:Key="PluginVersionTooOld">插件版本过旧: {0} v{1}，当前已安装版本为 v{2}。</sys:String>
+    <sys:String x:Key="PluginUpgradeAvailable">可以选择升级到新版本(v{0})。</sys:String>
     <sys:String x:Key="PluginDeleteConfirm" xml:space="preserve">开发者 {0}&#10;版本 {1}&#10;是否确认删除插件 「{2}」</sys:String>
     <sys:String x:Key="PluginDeleteFailed">插件删除失败</sys:String>
     <sys:String x:Key="PluginDeleteForRestart">插件已标记删除，重启后生效</sys:String>
@@ -745,6 +749,12 @@
     <sys:String x:Key="BuiltIn">内置</sys:String>
     <sys:String x:Key="PreInstall">预装</sys:String>
     <sys:String x:Key="Extend">拓展</sys:String>
+    <sys:String x:Key="AddTranslationService">添加翻译服务</sys:String>
+    <sys:String x:Key="AddOcrService">添加文本识别服务</sys:String>
+    <sys:String x:Key="AddTtsService">添加语音合成服务</sys:String>
+    <sys:String x:Key="AddVocabularyService">添加生词本服务</sys:String>
+    <sys:String x:Key="AddService">添加服务</sys:String>
+    <sys:String x:Key="DictionaryServiceNotSupportReplace">词典服务不支持替换功能。</sys:String>
 
     <!--  // Dictionary //  -->
     <sys:String x:Key="PlayPronunciation">播放发音</sys:String>
@@ -859,4 +869,10 @@
     <sys:String x:Key="EditPrompt_Content">编辑</sys:String>
     <sys:String x:Key="Temperature">温度控制</sys:String>
     <sys:String x:Key="Temperature_Description">控制着模型输出的随机性</sys:String>
+    <sys:String x:Key="ImageTranslatePin">贴图</sys:String>
+    <sys:String x:Key="ImageTranslatePinFailed">贴图失败</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedCopyAll">复制全文</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowOriginal">显示原图</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedShowTranslation">显示译文</sys:String>
+    <sys:String x:Key="ImageTranslatePinnedWindowShadow">窗口阴影</sys:String>
 </ResourceDictionary>
