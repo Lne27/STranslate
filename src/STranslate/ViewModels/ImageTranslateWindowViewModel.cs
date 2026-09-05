@@ -212,9 +212,6 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
             if (Settings.CopyAfterOcr)
                 ClipboardHelper.SetText(_lastOcrResult.Text);
 
-            _originalSelectionWords = OcrWordBuilder.CreateFromOcrContents(_lastOcrResult.OcrContents);
-            RefreshSelectableOcrWords();
-
             IsNoLocationInfoVisible = !Utilities.HasBoxPoints(_lastOcrResult);
 
             // 生成原始OCR标注图像（显示识别边框）
@@ -222,6 +219,8 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
 
             // 分段逻辑
             var layoutBlocks = ApplyLayoutAnalysis(_lastOcrResult);
+            _originalSelectionWords = OcrWordBuilder.CreateFromLayoutBlocks(layoutBlocks);
+            RefreshSelectableOcrWords();
 
             // 生成分段后的标注图像（显示合并后的边框）
             _annotatedImage = ImageTranslateRenderer.GenerateAnnotatedImage(_lastOcrResult, _sourceImage);

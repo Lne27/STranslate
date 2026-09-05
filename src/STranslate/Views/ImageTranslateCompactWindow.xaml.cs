@@ -229,7 +229,8 @@ public partial class ImageTranslateCompactWindow
         {
             var snapshot = PinnedImageTranslateSnapshot.Create(
                 _viewModel.SourceImage!, _viewModel.AnnotatedImage!, _viewModel.ResultOverlay!,
-                _viewModel.OriginalSelectionWords, _viewModel.TranslatedSelectionWords, _imagePhysicalBounds);
+                _viewModel.OriginalSelectionWords, _viewModel.TranslatedSelectionWords, _imagePhysicalBounds,
+                _viewModel.Settings.IsImTranShowingAnnotated);
             Ioc.Default.GetRequiredService<PinnedWindowController>().CreateWindow(snapshot);
             Close();
         }

@@ -4,6 +4,23 @@ namespace STranslate.Core;
 
 internal static class OcrWordSelection
 {
+    internal static bool TryGetParagraphRange(IReadOnlyList<OcrWord>? words, OcrWord anchor,
+        out int start, out int end)
+    {
+        start = int.MaxValue;
+        end = -1;
+        if (words == null || anchor.ParagraphIndex < 0)
+            return false;
+        foreach (var word in words)
+        {
+            if (word.ParagraphIndex != anchor.ParagraphIndex || word.Text.Length == 0)
+                continue;
+            start = Math.Min(start, word.StartIndexInFullText);
+            end = Math.Max(end, word.EndIndexInFullText - 1);
+        }
+        return end >= start;
+    }
+
     internal static bool TryGetWordRange(string text, int index, out int start, out int end)
     {
         start = 0;

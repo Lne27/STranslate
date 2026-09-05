@@ -44,6 +44,7 @@ public partial class PinnedImageTranslateWindow
     internal void Initialize(PinnedImageTranslateSnapshot snapshot, bool showShadow)
     {
         _snapshot = snapshot;
+        _showOriginal = snapshot.ShowOriginal;
         _imageBounds = snapshot.PhysicalBounds;
         _showShadow = showShadow;
         _chromeWindow.UpdateVisual(false, showShadow);
@@ -109,7 +110,7 @@ public partial class PinnedImageTranslateWindow
             if (e.ClickCount >= 2)
             {
                 PART_ImageZoom.Focus();
-                PART_ImageZoom.SelectTextAtPoint(point, selectVisualLine: e.ClickCount >= 3);
+                PART_ImageZoom.SelectTextAtPoint(point, selectParagraph: e.ClickCount >= 3);
                 e.Handled = true;
             }
             return;
@@ -255,7 +256,8 @@ public partial class PinnedImageTranslateWindow
 
         MenuItem AddItem(string key, Action action, bool enabled = true)
         {
-            var item = new MenuItem { Header = FindResource(key), IsEnabled = enabled };
+            var item = new MenuItem { IsEnabled = enabled };
+            item.SetResourceReference(HeaderedItemsControl.HeaderProperty, key);
             item.Click += (_, _) => action();
             menu.Items.Add(item);
             return item;
@@ -289,6 +291,11 @@ public partial class PinnedImageTranslateWindow
         if (dx == 0 && dy == 0)
             return;
         _imageBounds.Offset(dx, dy);
+        if (syncLogicalBounds)
+        {
+            ApplyBounds();
+            return;
+        }
         var dpi = GetDpi();
         if (!_chromeWindow.IsVisible || !Win32Helper.SetTwoWindowPhysicalBounds(this, _imageBounds,
                 _chromeWindow, PinnedImageTranslateChromeWindow.CalculateOuterBounds(_imageBounds, dpi)))
@@ -296,8 +303,6 @@ public partial class PinnedImageTranslateWindow
             Win32Helper.SetWindowPhysicalBounds(this, _imageBounds.Left, _imageBounds.Top, _imageBounds.Width, _imageBounds.Height);
             _chromeWindow.UpdateBounds(_imageBounds, dpi);
         }
-        if (syncLogicalBounds)
-            ApplyBounds();
     }
 
     private void UpdateChromeVisual()
@@ -312,8 +317,27 @@ public partial class PinnedImageTranslateWindow
     {
         if (msg == 0x02E0) // WM_DPICHANGED：等 WPF 更新 DPI 后按原始物理尺寸重排。
             Dispatcher.BeginInvoke(ApplyBounds, DispatcherPriority.Loaded);
+        else if (msg == 0x007E) // WM_DISPLAYCHANGE：拔掉显示器后，把不可见的贴图移回最近工作区。
+            Dispatcher.BeginInvoke(RestoreToVisibleMonitor, DispatcherPriority.Loaded);
         return 0;
     }
+
+    private void RestoreToVisibleMonitor()
+    {
+        if (_isClosing)
+            return;
+        var bounds = new Rect(_imageBounds.X, _imageBounds.Y, _imageBounds.Width, _imageBounds.Height);
+        if (MonitorInfo.GetDisplayMonitors().Any(monitor => monitor.WorkingArea.IntersectsWith(bounds)))
+            return;
+        var workArea = MonitorInfo.GetNearestDisplayMonitor(new WindowInteropHelper(this).Handle).WorkingArea;
+        _imageBounds = ClampToWorkArea(_imageBounds, workArea);
+        ApplyBounds();
+    }
+
+    internal static DrawingRectangle ClampToWorkArea(DrawingRectangle bounds, Rect workArea) => new(
+        (int)Math.Clamp(bounds.X, workArea.Left, Math.Max(workArea.Left, workArea.Right - bounds.Width)),
+        (int)Math.Clamp(bounds.Y, workArea.Top, Math.Max(workArea.Top, workArea.Bottom - bounds.Height)),
+        bounds.Width, bounds.Height);
 
     private static bool TryGetCursorPosition(out DrawingPoint point)
     {

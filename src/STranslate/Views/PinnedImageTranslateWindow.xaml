@@ -21,6 +21,7 @@
                 Panel.ZIndex="5"
                 AlwaysHideZoomValueHint="True"
                 DisableDoubleClickReset="True"
+                DisableAnimation="True"
                 IsPanAndZoomEnabled="False" />
         </Grid>
     </Grid>

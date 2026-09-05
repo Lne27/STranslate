@@ -164,11 +164,11 @@ public class PinnedImageTranslateTests
             zoom.UpdateLayout();
             Assert.Equal("hello world", zoom.GetFullText());
             Assert.Empty(zoom.SelectedText);
-            zoom.SelectTextAtPoint(new Point(25, 25), selectVisualLine: false);
+            zoom.SelectTextAtPoint(new Point(25, 25), selectParagraph: false);
             Assert.Equal("hello", zoom.SelectedText);
             Assert.True(zoom.IsPointOverTextSelection(new Point(25, 25)));
             Assert.False(zoom.IsPointOverTextSelection(new Point(95, 25)));
-            zoom.SelectTextAtPoint(new Point(25, 25), selectVisualLine: true);
+            zoom.SelectTextAtPoint(new Point(25, 25), selectParagraph: true);
             Assert.Equal("hello world", zoom.SelectedText);
             zoom.OcrWords = Words("原文");
             Assert.Empty(zoom.SelectedText);
@@ -195,9 +195,9 @@ public class PinnedImageTranslateTests
             zoom.Measure(new Size(320, 120));
             zoom.Arrange(new Rect(0, 0, 320, 120));
             zoom.UpdateLayout();
-            zoom.SelectTextAtPoint(new Point(25, 25), selectVisualLine: false);
+            zoom.SelectTextAtPoint(new Point(25, 25), selectParagraph: false);
             Assert.Equal("hello", zoom.SelectedText);
-            zoom.SelectTextAtPoint(new Point(125, 25), selectVisualLine: true);
+            zoom.SelectTextAtPoint(new Point(125, 25), selectParagraph: true);
             Assert.Equal("world", zoom.SelectedText);
         });
     }
@@ -217,8 +217,135 @@ public class PinnedImageTranslateTests
         return zoom;
     }
 
+    [Theory]
+    [InlineData(LayoutAnalysisMode.Auto)]
+    [InlineData(LayoutAnalysisMode.Provider)]
+    [InlineData(LayoutAnalysisMode.Smart)]
+    [InlineData(LayoutAnalysisMode.NoMerge)]
+    public void SourceParagraphSelectionUsesAnalyzedMembershipAndPreservesCoordinates(LayoutAnalysisMode mode)
+    {
+        RunOnSta(() =>
+        {
+            var lines = new[]
+            {
+                SourceLine("This is the first line", 10, 10, 180),
+                SourceLine("continued on the next line", 10, 34, 210),
+                SourceLine("A separate paragraph", 10, 100, 190)
+            };
+            var ocr = new OcrResult
+            {
+                OcrContents = lines.ToList(),
+                Regions = [new() { Paragraphs = [new() { Lines = [lines[0], lines[1]] }, new() { Lines = [lines[2]] }] }]
+            };
+            var blocks = OcrLayoutAnalyzer.AnalyzeBlocks(ocr, mode);
+            var words = OcrWordBuilder.CreateFromLayoutBlocks(blocks);
+            var anchor = words.First(w => w.BoundingBox.Top == 34);
+            Assert.True(OcrWordSelection.TryGetParagraphRange(words, anchor, out var start, out var end));
+            var selected = string.Concat(words.Select(w => w.Text))[start..(end + 1)];
+            Assert.Equal(mode == LayoutAnalysisMode.NoMerge ? lines[1].Text :
+                lines[0].Text + Environment.NewLine + lines[1].Text, selected);
+            Assert.DoesNotContain(lines[2].Text, selected);
+            Assert.Equal(10, anchor.BoundingBox.Left);
+            Assert.Equal(210d / lines[1].Text.Length, anchor.BoundingBox.Width);
+            var image = Image(320, 120);
+            var snapshot = PinnedImageTranslateSnapshot.Create(image, image, Overlay(), words, words,
+                new DrawingRectangle(0, 0, 320, 120), showOriginal: true);
+            Assert.True(snapshot.ShowOriginal);
+            Assert.Equal(anchor.ParagraphIndex, snapshot.OriginalWords.First(w => w.BoundingBox.Top == 34).ParagraphIndex);
+        });
+    }
+
+    [Fact]
+    public void TripleClickSelectsAllWrappedLinesWithoutCrossingAdjacentParagraph()
+    {
+        RunOnSta(() =>
+        {
+            const string first = "This is a paragraph with enough text to wrap across several visual lines.";
+            var formatted = ImageTranslateRenderer.CreateFormattedText(first, 16, Brushes.Black, 180,
+                double.PositiveInfinity, 20, false, 1);
+            var firstWords = OcrWordBuilder.CreateFromFormattedText(first, formatted, new Point(10, 10),
+                new Rect(10, 10, 180, 110), 1);
+            var other = Words("Another paragraph");
+            foreach (var word in other)
+                word.BoundingBox = new Rect(word.BoundingBox.Left + 190, 20, 5, 20);
+            var zoom = CreateImageZoom();
+            zoom.OcrWords = OcrWordBuilder.CreateIndexedCollectionFromGroups([firstWords, other], separateParagraphs: true);
+            zoom.Measure(new Size(320, 120));
+            zoom.Arrange(new Rect(0, 0, 320, 120));
+            zoom.UpdateLayout();
+            var firstParagraph = zoom.OcrWords.Where(w => w.ParagraphIndex == 0 && !w.BoundingBox.IsEmpty).ToArray();
+            Assert.True(firstParagraph.Select(w => w.VisualLineIndex).Distinct().Count() > 1);
+            foreach (var line in firstParagraph.GroupBy(w => w.VisualLineIndex))
+            {
+                var bounds = line.First().BoundingBox;
+                zoom.SelectTextAtPoint(new Point(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2),
+                    selectParagraph: true);
+                Assert.Equal(first, zoom.SelectedText);
+            }
+            Assert.Equal(first + Environment.NewLine + "Another paragraph", zoom.GetFullText());
+        });
+    }
+
+    [Fact]
+    public void ParagraphSelectionKeepsInterleavedColumnsSeparate()
+    {
+        var blocks = OcrLayoutAnalyzer.AnalyzeBlocks(new[]
+        {
+            SourceLine("Left column starts here", 0, 0, 180),
+            SourceLine("Right column starts here", 300, 0, 190),
+            SourceLine("and continues below", 0, 24, 160),
+            SourceLine("with its own text", 300, 24, 150)
+        }, LayoutAnalysisMode.Smart);
+        var words = OcrWordBuilder.CreateFromLayoutBlocks(blocks);
+        var anchor = words.First(w => w.BoundingBox.Left == 0 && w.BoundingBox.Top == 24);
+        Assert.True(OcrWordSelection.TryGetParagraphRange(words, anchor, out var start, out var end));
+        Assert.Equal("Left column starts here" + Environment.NewLine + "and continues below",
+            string.Concat(words.Select(w => w.Text))[start..(end + 1)]);
+    }
+
+    private static OcrContent SourceLine(string text, float x, float y, float width) => new()
+    {
+        Text = text, BoxPoints = [new(x, y), new(x + width, y), new(x + width, y + 20), new(x, y + 20)]
+    };
+
+    [Fact]
+    public void ClippedTranslationKeepsCompleteParagraphForCopying()
+    {
+        RunOnSta(() =>
+        {
+            const string text = "This complete paragraph must remain available even when its tail is clipped.";
+            var formatted = ImageTranslateRenderer.CreateFormattedText(text, 16, Brushes.Black, 800,
+                100, 0, true, 1, maxLineCount: 1);
+            var words = OcrWordBuilder.CreateIndexedCollectionFromGroups([
+                OcrWordBuilder.CreateFromFormattedText(text, formatted, new Point(10, 10), new Rect(10, 10, 70, 40), 1,
+                    preserveClippedText: true)
+            ]);
+            Assert.Contains(words, w => w.BoundingBox.IsEmpty && !string.IsNullOrWhiteSpace(w.Text));
+            var zoom = CreateImageZoom();
+            zoom.OcrWords = words;
+            zoom.Measure(new Size(320, 120));
+            zoom.Arrange(new Rect(0, 0, 320, 120));
+            zoom.UpdateLayout();
+            var anchor = words.First(w => !w.BoundingBox.IsEmpty).BoundingBox;
+            zoom.SelectTextAtPoint(new Point(anchor.Left + anchor.Width / 2, anchor.Top + anchor.Height / 2),
+                selectParagraph: true);
+            Assert.Equal(text, zoom.SelectedText);
+            Assert.Equal(text, zoom.GetFullText());
+        });
+    }
+
+    [Theory]
+    [InlineData(-2000, -1000, 300, 200, 0, 0)]
+    [InlineData(3000, 2000, 300, 200, 1620, 880)]
+    [InlineData(-2000, -1000, 3000, 2000, 0, 0)]
+    public void RemovedMonitorRecoveryKeepsPhysicalSize(int x, int y, int width, int height, int expectedX, int expectedY)
+    {
+        Assert.Equal(new DrawingRectangle(expectedX, expectedY, width, height),
+            PinnedImageTranslateWindow.ClampToWorkArea(new DrawingRectangle(x, y, width, height), new Rect(0, 0, 1920, 1080)));
+    }
+
     private static ObservableCollection<OcrWord> Words(string text) => OcrWordBuilder.CreateIndexedCollection(
-        text.Select((ch, index) => new OcrWord { Text = ch.ToString(), BoundingBox = new Rect(10 + index * 10, 20, 10, 20) }), true);
+        text.Select((ch, index) => new OcrWord { Text = ch.ToString(), ParagraphIndex = 0, BoundingBox = new Rect(10 + index * 10, 20, 10, 20) }), true);
 
     private static BitmapSource Image(int width, int height)
     {

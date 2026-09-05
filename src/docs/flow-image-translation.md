@@ -66,7 +66,7 @@
 - `ImageTranslateWindowViewModel.CanPin` 只在执行结束且原图、标注图、非空译文覆盖层均存在时为真。生成结果和修改服务/语言/分段仍由原 Compact 链路负责。
 - `ImageTranslateCompactWindow` 保存截图原始物理矩形。点击 Pin 时导出冻结图片、矢量覆盖层和深复制的原文/译文选择数据；创建贴图成功后才关闭 Compact，失败则保留当前结果并提示。
 - `PinnedImageTranslateWindow` 没有工具条、ViewModel、服务、设置订阅或后台任务。多个贴图独立显示，不随 Compact 后续执行、服务删除或设置变化重新计算。
-- 译文层显示原始截图和原覆盖层；原图层保留红框标注图。单击清除旧选择并可拖选，双击选择当前视觉段内的词，三击选择同一 `VisualLineIndex` 的连续文本；其他 `ImageZoom` 界面保留上游双击选行行为。
+- 译文层显示原始截图和原覆盖层；原图层保留红框标注图，Pin 继承 Compact 当前显示层。单击清除旧选择并可拖选，双击选择当前段落内的词，三击按 `ParagraphIndex` 选择完整段落（包含软换行）；段落直接来自现有布局分析器。其他 `ImageZoom` 界面保留上游双击选行行为。
 - 右键基础菜单为“复制全文、显示原图/译文、窗口阴影、关闭”。右键命中当前高亮时额外显示“复制”；复制全文不制造全选高亮，切层清除旧选择。原有 `Ctrl+A/C`、Esc、空白拖动/双击关闭和方向键移动继续作用于当前贴图。
 - Chrome 伴随窗沿用 PR #769 的 10 DIP 外扩、非激活黑影（8 / 0.36 / Performance）和激活蓝光（`#4D90FE`、6 / 0.42 / Quality）。阴影关闭只影响非激活黑影，当前窗口切换值写入设置供以后新窗使用。
 - 两个异步截图入口通过 `PinnedWindowController` 成对 cloak / uncloak 内容窗与 Chrome。截图期间的新 Chrome HWND 先应用 cloak 再显示；重复截图输入不排队。

@@ -42,9 +42,8 @@ public sealed class PinnedWindowController(Settings settings, Internationalizati
         try
         {
             window.Initialize(snapshot, ShowShadow);
+            window.ShowActivated = !_captureActive;
             window.Show();
-            if (!_captureActive)
-                window.Activate();
             return window;
         }
         catch
@@ -142,12 +141,13 @@ internal sealed record PinnedImageTranslateSnapshot(
     ImageTranslateOverlayDocument TranslationOverlay,
     IReadOnlyList<OcrWord> OriginalWords,
     IReadOnlyList<OcrWord> TranslatedWords,
-    DrawingRectangle PhysicalBounds)
+    DrawingRectangle PhysicalBounds,
+    bool ShowOriginal)
 {
     internal static PinnedImageTranslateSnapshot Create(
         BitmapSource source, BitmapSource annotated, ImageTranslateOverlayDocument overlay,
         IReadOnlyList<OcrWord> originalWords, IReadOnlyList<OcrWord> translatedWords,
-        DrawingRectangle bounds)
+        DrawingRectangle bounds, bool showOriginal = false)
     {
         if (bounds.Width <= 0 || bounds.Height <= 0 ||
             source.PixelWidth != bounds.Width || source.PixelHeight != bounds.Height ||
@@ -156,7 +156,7 @@ internal sealed record PinnedImageTranslateSnapshot(
             throw new ArgumentException("Pin requires a frozen, completed result matching the physical image bounds.");
 
         return new(source, annotated, new ImageTranslateOverlayDocument(overlay.Items.ToArray(), []),
-            CloneWords(originalWords), CloneWords(translatedWords), bounds);
+            CloneWords(originalWords), CloneWords(translatedWords), bounds, showOriginal);
     }
 
     private static IReadOnlyList<OcrWord> CloneWords(IReadOnlyList<OcrWord> words) =>
@@ -166,5 +166,6 @@ internal sealed record PinnedImageTranslateSnapshot(
             BoundingBox = word.BoundingBox,
             StartIndexInFullText = word.StartIndexInFullText,
             VisualLineIndex = word.VisualLineIndex,
+            ParagraphIndex = word.ParagraphIndex,
         }).ToArray());
 }

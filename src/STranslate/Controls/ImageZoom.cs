@@ -606,7 +606,7 @@ public class ImageZoom : Control
     }
 
     // Pinned 在 Preview 事件中调用；其他 ImageZoom 保留原有的双击选行行为。
-    internal void SelectTextAtPoint(Point point, bool selectVisualLine)
+    internal void SelectTextAtPoint(Point point, bool selectParagraph)
     {
         if (_interactionCanvas == null)
             return;
@@ -614,16 +614,22 @@ public class ImageZoom : Control
         var word = FindWordAtPoint(canvasPoint);
         if (word == null)
             return;
-        if (selectVisualLine)
+        if (selectParagraph)
         {
-            SelectVisualLineAtPoint(canvasPoint);
+            if (OcrWordSelection.TryGetParagraphRange(OcrWords, word, out var paragraphStart, out var paragraphEnd))
+            {
+                _isSelecting = false;
+                _selectionStartIndex = paragraphStart;
+                _selectionEndIndex = paragraphEnd;
+                UpdateSelectionHighlight();
+            }
             return;
         }
         if (OcrWordSelection.TryGetWordRange(GetFullText(), CalculateCharacterIndexInWord(word, canvasPoint),
                 out var start, out var end))
         {
-            // 独立覆盖块的逻辑文本可能直接相连，选词不能越过当前视觉段。
-            if (OcrWordSelection.TryGetVisualLineRange(OcrWords, word, out var lineStart, out var lineEnd))
+            // 软换行不应截断单词，但独立段落的文字不能合成一个词。
+            if (OcrWordSelection.TryGetParagraphRange(OcrWords, word, out var lineStart, out var lineEnd))
             {
                 start = Math.Max(start, lineStart);
                 end = Math.Min(end, lineEnd);
@@ -824,6 +830,13 @@ public class ImageZoom : Control
         if (transform == null || property == null)
             return;
 
+        if (DisableAnimation)
+        {
+            transform.BeginAnimation(property, null);
+            transform.SetCurrentValue(property, targetValue);
+            return;
+        }
+
         var duration = useAnimation && !DisableAnimation
             ? TimeSpan.FromMilliseconds(AnimationDurationMs)
             : TimeSpan.Zero;
@@ -838,7 +851,7 @@ public class ImageZoom : Control
 
     private void AnimateZoomHint()
     {
-        if (_scaleTextBorder == null)
+        if (_scaleTextBorder == null || AlwaysHideZoomValueHint || DisableAnimation)
             return;
 
         var duration = TimeSpan.FromMilliseconds(ZoomValueHintAnimationDurationMs);
