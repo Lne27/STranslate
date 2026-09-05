@@ -14,7 +14,7 @@ using DrawingRectangle = System.Drawing.Rectangle;
 internal static class Program
 {
     [STAThread]
-    private static void Main()
+    private static void Main(string[] args)
     {
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         app.Resources.MergedDictionaries.Add(new ResourceDictionary
@@ -23,7 +23,11 @@ internal static class Program
         });
         app.Dispatcher.InvokeAsync(async () =>
         {
-            try { await Run(); }
+            try
+            {
+                if (args.Contains("--components")) await ComponentMemory.Run();
+                else await Run();
+            }
             catch (Exception ex) { Console.Error.WriteLine(ex); Environment.ExitCode = 1; }
             finally { app.Shutdown(); }
         });
