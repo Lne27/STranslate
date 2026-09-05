@@ -1,13 +1,13 @@
 # Compact 结果贴图：本轮审阅说明
 
-本轮按 [维护者在 PR #769 的回复](https://github.com/STranslate/STranslate/pull/769#issuecomment-5536176286) 重构。按提交者 2026-09-05 的最新要求，新增入口限于 **Compact 工具条上的 Pin 按钮**，不增加 Pin 快捷键或快捷键配置。真实用户调用链和桌面视觉验收由提交者自行完成。
+本轮按 [维护者在 PR #769 的回复](https://github.com/STranslate/STranslate/pull/769#issuecomment-5536176286) 重构。Compact 工具条上的 Pin 按钮和可配置的 **Ctrl+Shift+P** 共用现有 Pin 命令；快捷键只在 Compact 中生效。真实用户调用链和桌面视觉验收由提交者自行完成。
 
 ## 基线与范围
 
 - 原 PR 提交：`2f5d98df213c2ca4023da42a2a531b9e4fc42d56`。
 - 已同步上游：`2a75118fe0fabc1135a619f4393eb3a8d936c5cd`（v2.0.10）。
 - 删除第三种模式、Pinned ViewModel、执行协调器、选项/任务快照、工具条与自动重算。
-- `MainWindowViewModel`、`HotkeySettings`、模式设置页面、`ServiceManager` 和 WeChat OCR 实现相对上述上游基线无本轮改动。
+- `MainWindowViewModel`、模式设置页面、`ServiceManager` 和 WeChat OCR 实现相对上述上游基线无本轮改动。`HotkeySettings` 通过原有机制增加一项软件内快捷键，支持编辑、清空、重置、冲突检查和持久化。
 - Compact 完成 OCR/翻译后才可 Pin；先成功创建独立贴图，再释放 Compact。静态窗口只显示结果和处理选择、复制、窗口交互。
 - 原图、红框标注图和译文矢量覆盖层不重新识别、不二次编码；选择数据逐项复制。
 - 原 PR 的 Chrome 颜色、模糊、透明度、渲染偏好和边距保持原值。绘制改为四边裁剪加中央实色填充，减少中间表面，并修复延迟创建 HWND 时的截图 cloak 状态传递。
@@ -15,8 +15,8 @@
 ## 自动验证结果
 
 - .NET SDK：10.0.400，Windows x64。
-- Debug 和 Release 解决方案构建：通过，0 警告、0 错误。
-- Release 测试：321 通过、0 失败、0 跳过；最终上游候选原有 274 项测试通过。
+- Debug 和 Release 解决方案构建：通过；Release 0 警告、0 错误。Debug 使用上游的空 Fody 配置，产生一项 Costura 未配置的警告。
+- Release 测试：326 通过、0 失败、0 跳过；最终上游候选原有 274 项测试通过。另有 20 项实际 Compact 窗口绑定与命令断言通过，见快捷键验证说明。
 - `git diff --check`：通过。语言资源保留上游文件换行，Git 检查按 CRLF 文件设置 `cr-at-eol`。
 - 新增/更新测试覆盖：旧配置单字段迁移、32/63/64 像素截图尺寸、快照与原选择数据隔离、当前显示层继承、无效快照拒绝、Unicode 选词、四种分段模式的完整段落、多栏隔离、软换行与裁剪文本、切层清除高亮、复制全文不改变选择，以及 100%/125%/150%/175%/200% DPI 几何、Chrome 状态参数与断屏后定位。
 

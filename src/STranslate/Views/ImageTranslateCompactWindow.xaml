@@ -28,6 +28,10 @@
     mc:Ignorable="d">
     <Window.InputBindings>
         <KeyBinding
+            Key="{Binding HotkeySettings.PinImageTranslateHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Key}}"
+            Command="{Binding Command, ElementName=PART_PinButton}"
+            Modifiers="{Binding HotkeySettings.PinImageTranslateHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
+        <KeyBinding
             Key="Esc"
             Command="{Binding CancelCommand}"
             CommandParameter="{Binding ElementName=STImageTranslateCompactWindow}" />

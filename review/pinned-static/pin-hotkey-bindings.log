@@ -1,0 +1,21 @@
+PASS: Compiled key binding shares Pin button command
+PASS: Default gesture
+PASS: Live custom gesture
+PASS: Cleared gesture
+PASS: Live reset
+PASS: Incomplete result rejects Pin
+PASS: Executing result rejects Pin
+PASS: Completed result enables Pin
+PASS: Command bound to F8 creates exactly one static pin
+PASS: Compact releases bindings and content
+PASS: Compiled key binding shares Pin button command
+PASS: Default gesture
+PASS: Live custom gesture
+PASS: Cleared gesture
+PASS: Live reset
+PASS: Incomplete result rejects Pin
+PASS: Executing result rejects Pin
+PASS: Completed result enables Pin
+PASS: Command bound to Ctrl + Shift + P creates exactly one static pin
+PASS: Compact releases bindings and content
+PASS: all Compact hotkey checks completed.

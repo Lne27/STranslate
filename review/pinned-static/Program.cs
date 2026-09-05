@@ -25,7 +25,8 @@ internal static class Program
         {
             try
             {
-                if (args.Contains("--components")) await ComponentMemory.Run();
+                if (args.Contains("--hotkeys")) await CompactHotkeys.Run();
+                else if (args.Contains("--components")) await ComponentMemory.Run();
                 else if (args.Contains("--chrome-pixels")) ChromePixelComparison.Run();
                 else if (args.Contains("--chrome-preview")) await ChromePixelComparison.Preview();
                 else if (args.Contains("--pin-memory")) await ComponentMemory.PinSequence();
