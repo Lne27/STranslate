@@ -26,6 +26,9 @@ internal static class Program
             try
             {
                 if (args.Contains("--components")) await ComponentMemory.Run();
+                else if (args.Contains("--chrome-pixels")) ChromePixelComparison.Run();
+                else if (args.Contains("--chrome-preview")) await ChromePixelComparison.Preview();
+                else if (args.Contains("--pin-memory")) await ComponentMemory.PinSequence();
                 else await Run();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); Environment.ExitCode = 1; }
@@ -66,6 +69,16 @@ internal static class Program
             var after = Memory();
             await Task.Delay(3000);
             var cpu = await IdleCpu();
+            if (Environment.GetEnvironmentVariable("PIN_IDLE_PROBE") == "1")
+            {
+                for (var probe = 0; probe < 3; probe++)
+                {
+                    var allocated = GC.GetTotalAllocatedBytes();
+                    var idle = await IdleCpu();
+                    Console.Error.WriteLine(JsonSerializer.Serialize(new { count, probe, idleCpuMs = idle,
+                        idleAllocatedBytes = GC.GetTotalAllocatedBytes() - allocated }));
+                }
+            }
             var captureTimes = new List<double>();
             for (var i = 0; i < 5; i++)
             {

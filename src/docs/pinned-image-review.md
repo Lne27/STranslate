@@ -10,13 +10,13 @@
 - `MainWindowViewModel`、`HotkeySettings`、模式设置页面、`ServiceManager` 和 WeChat OCR 实现相对上述上游基线无本轮改动。
 - Compact 完成 OCR/翻译后才可 Pin；先成功创建独立贴图，再释放 Compact。静态窗口只显示结果和处理选择、复制、窗口交互。
 - 原图、红框标注图和译文矢量覆盖层不重新识别、不二次编码；选择数据逐项复制。
-- 原 PR 的 Chrome 绘制、颜色、模糊、透明度、渲染偏好和边距保持原值，只修复延迟创建 HWND 时的截图 cloak 状态传递。
+- 原 PR 的 Chrome 颜色、模糊、透明度、渲染偏好和边距保持原值。绘制改为四边裁剪加中央实色填充，减少中间表面，并修复延迟创建 HWND 时的截图 cloak 状态传递。
 
 ## 自动验证结果
 
 - .NET SDK：10.0.400，Windows x64。
 - Debug 和 Release 解决方案构建：通过，0 警告、0 错误。
-- Release 测试：315 通过、0 失败、0 跳过。
+- Release 测试：321 通过、0 失败、0 跳过；最终上游候选原有 274 项测试通过。
 - `git diff --check`：通过。语言资源保留上游文件换行，Git 检查按 CRLF 文件设置 `cr-at-eol`。
 - 新增/更新测试覆盖：旧配置单字段迁移、32/63/64 像素截图尺寸、快照与原选择数据隔离、当前显示层继承、无效快照拒绝、Unicode 选词、四种分段模式的完整段落、多栏隔离、软换行与裁剪文本、切层清除高亮、复制全文不改变选择，以及 100%/125%/150%/175%/200% DPI 几何、Chrome 状态参数与断屏后定位。
 
@@ -28,7 +28,7 @@ dotnet build src/STranslate.slnx -c Release -p:EnableSourceControlManagerQueries
 dotnet test src/Tests/STranslate.Tests/STranslate.Tests.csproj -c Release -p:EnableSourceControlManagerQueries=false
 ```
 
-这些结果是构建与自动回归证据，不代表真实截图链路已达到 100% 可靠，也不代表已经通过桌面逐像素视觉比较。
+提交者已完成截图/OCR/翻译/Pin 的手动测试。本次绘制改动增加了 168 组无损逐像素回归，覆盖反复切换、尺寸变化及 100%～300% DPI；另完成桌面并排外观检查。完整条件与结果见窗口测量说明。
 
 ## 提交者验收清单
 
@@ -56,6 +56,6 @@ dotnet test src/Tests/STranslate.Tests/STranslate.Tests.csproj -c Release -p:Ena
 
 ## 性能与上游提交范围
 
-窗口级检查和微基准见 [测量说明](../../review/pinned-static/README.md)，包含可运行程序和原始数据。快照逻辑开销小、空闲没有后台重算，但 WPF 图片/阴影表面有实际内存成本；不做“所有环境零开销”或“全链路 100%”承诺。
+窗口级检查和测量见 [测量说明](../../review/pinned-static/README.md)，包含可运行程序、原始数据及创建耗时。最终绘制优化在连续 30 次 Pin 测量中将总内存增量中位数从 371.77 MiB 降至 354.36 MiB；分阶段创建时，阴影/辉光阶段增量从 176.23 MiB 降至 51.33 MiB。快照共享冻结图片，绘制按尺寸、DPI 和激活状态更新。
 
-个人审阅分支保留测试、说明、测量程序与 PR 草稿。拟提交上游的 `feature/compact-pin` 分支只包含应用代码和运行所需语言资源，与审阅分支的生产源文件一致，不包含新增测试、规划、AGENTS 导航或本说明。新 PR 等提交者最后手测确认后再创建。
+`feature/compact-pin` 分支包含应用代码和运行所需语言资源。测试代码分支与其生产源码的差别仅为测试代码分支保留旧预览配置迁移。英文 PR 说明见 [PR 草稿](../../review/pinned-static/upstream-pr-draft.md)。

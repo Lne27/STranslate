@@ -105,27 +105,36 @@ public class PinnedImageTranslateTests
             image.Right + margin, image.Bottom + margin), outer);
     }
 
-    [Fact]
-    public void ChromeRetainsOriginalActiveGlowAndInactiveShadowContract()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(1.25)]
+    [InlineData(1.5)]
+    [InlineData(1.75)]
+    [InlineData(2)]
+    [InlineData(2.5)]
+    [InlineData(3)]
+    public void ChromeRetainsOriginalActiveGlowAndInactiveShadowPixels(double scale)
     {
         RunOnSta(() =>
         {
             var chrome = new PinnedImageTranslateChromeWindow();
             try
             {
-                var grid = Assert.IsType<Grid>(chrome.Content);
-                var shadow = Assert.IsType<Border>(grid.Children[0]);
-                var glow = Assert.IsType<Border>(grid.Children[1]);
-                AssertCaster(shadow, Colors.White, Colors.Black, 8, 0.36, RenderingBias.Performance);
-                AssertCaster(glow, Color.FromRgb(0x4D, 0x90, 0xFE), Color.FromRgb(0x4D, 0x90, 0xFE), 6, 0.42, RenderingBias.Quality);
+                var surface = Assert.IsAssignableFrom<FrameworkElement>(chrome.Content);
+                chrome.Content = null;
+                foreach (var size in new[] { new Size(32, 32), new Size(63, 47), new Size(800, 400), new Size(855, 529) })
                 foreach (var shadowEnabled in new[] { false, true })
+                foreach (var active in new[] { false, true, false })
                 {
-                    chrome.UpdateVisual(true, shadowEnabled);
-                    Assert.Equal(Visibility.Visible, glow.Visibility);
-                    Assert.Equal(Visibility.Collapsed, shadow.Visibility);
-                    chrome.UpdateVisual(false, shadowEnabled);
-                    Assert.Equal(Visibility.Collapsed, glow.Visibility);
-                    Assert.Equal(shadowEnabled ? Visibility.Visible : Visibility.Collapsed, shadow.Visibility);
+                    chrome.UpdateVisual(active, shadowEnabled);
+                    var original = new Grid();
+                    var color = Color.FromRgb(0x4D, 0x90, 0xFE);
+                    // 保留旧 PR 的两个 Border，独立对照优化后的四边裁剪实现。
+                    original.Children.Add(OriginalCaster(Colors.White, Colors.Black, 8, .36, RenderingBias.Performance, !active && shadowEnabled));
+                    original.Children.Add(OriginalCaster(color, color, 6, .42, RenderingBias.Quality, active));
+                    var width = (int)size.Width + 2 * (int)Math.Ceiling(10 * scale);
+                    var height = (int)size.Height + 2 * (int)Math.Ceiling(10 * scale);
+                    Assert.Equal(RenderChrome(original, width, height, scale), RenderChrome(surface, width, height, scale));
                 }
             }
             finally { chrome.Close(); }
@@ -361,17 +370,25 @@ public class PinnedImageTranslateTests
             [new OcrLayoutBlock { Text = "hello world", BoxPoints = box, LineBoxPoints = [box] }], ImageTranslateOverlayTheme.Light);
     }
 
-    private static void AssertCaster(Border caster, Color background, Color color, double blur, double opacity, RenderingBias bias)
+    private static Border OriginalCaster(Color background, Color color, double blur, double opacity, RenderingBias bias, bool visible) => new()
     {
-        Assert.Equal(new Thickness(10), caster.Margin);
-        Assert.Equal(background, Assert.IsType<SolidColorBrush>(caster.Background).Color);
-        var effect = Assert.IsType<DropShadowEffect>(caster.Effect);
-        Assert.Equal(color, effect.Color);
-        Assert.Equal(blur, effect.BlurRadius);
-        Assert.Equal(opacity, effect.Opacity);
-        Assert.Equal(bias, effect.RenderingBias);
-        Assert.Equal(0, effect.ShadowDepth);
-        Assert.Equal(0, effect.Direction);
+        Margin = new Thickness(10), Background = new SolidColorBrush(background),
+        Visibility = visible ? Visibility.Visible : Visibility.Collapsed,
+        Effect = new DropShadowEffect { Color = color, BlurRadius = blur, Opacity = opacity,
+            RenderingBias = bias, ShadowDepth = 0, Direction = 0 }
+    };
+
+    private static byte[] RenderChrome(FrameworkElement element, int width, int height, double scale)
+    {
+        VisualTreeHelper.SetRootDpi(element, new DpiScale(scale, scale));
+        element.Measure(new Size(width / scale, height / scale));
+        element.Arrange(new Rect(0, 0, width / scale, height / scale));
+        element.UpdateLayout();
+        var bitmap = new RenderTargetBitmap(width, height, 96 * scale, 96 * scale, PixelFormats.Pbgra32);
+        bitmap.Render(element);
+        var bytes = new byte[width * height * 4];
+        bitmap.CopyPixels(bytes, width * 4, 0);
+        return bytes;
     }
 
     private static void RunOnSta(Action action)

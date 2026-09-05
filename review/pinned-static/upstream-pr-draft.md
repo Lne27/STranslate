@@ -1,35 +1,56 @@
 # feat: pin static image translation results from Compact
 
-感谢作者在 #769 中对交互和架构的指导。这一版按建议改为：先在 Compact 中完成截图、OCR 和翻译，再通过工具条上的 Pin 按钮把结果固定为独立的置顶贴图。
+Thank you for the guidance on interaction and architecture in #769. This revision follows the suggested flow: finish screenshot capture, OCR and translation in Compact, then use a **Pin** button in its toolbar to keep the completed result in an independent, always-on-top window.
 
-对应原反馈，改动如下：
+Changes addressing the feedback:
 
-1. 保留原有 Standalone / Compact 两种模式，在 Compact 工具条增加 Pin 按钮。Pin 成功后关闭当前 Compact，原有入口可以继续处理下一次截图；贴图本身没有工具条。没有新增模式或快捷键配置。
-2. 贴图只持有静态显示结果。复用冻结的原图、标注图和矢量译文覆盖层，复制两层文字的选择数据；没有独立 ViewModel、OCR/翻译任务、自动重算、防抖、执行协调器或延迟服务释放。
-3. 原文、译文均支持单击定位、拖选、双击选词、三击选段和复制。段落归属复用现有分段分析结果，软换行不会截断整段；裁剪的译文仍保留完整复制文本。文字区域右键复制选中文字，空白右键提供复制全文、原图/译文切换、阴影开关和关闭；空白区域可以拖动，双击关闭。
-4. 多个贴图相互独立。后续服务、语言、分段和显示层设置变化不会改写已固定内容；菜单语言使用现有动态资源。新截图框选期间暂时隐藏贴图与阴影，完成或取消后恢复，覆盖框选期间新增、关闭贴图的情况。
-5. 保留前版的黑色阴影和激活蓝色辉光。独立 Chrome 窗口负责外扩效果和鼠标穿透；内容窗口复用 ImageZoom。阴影开关作用于当前贴图，并保存为后续新贴图的默认值；激活辉光保持独立。
+1. **Use the existing Compact mode.** Standalone and Compact remain the two image-translation modes. The Pin button is available once a result is ready. A successful pin closes Compact so the existing entry points can start the next task. Pinned windows have no toolbar, and this change adds no hotkey configuration.
+2. **Keep pinned results static.** Each pin shares the frozen source and annotated images and the completed vector translation overlay, and copies the text-selection data. It has no translation ViewModel, OCR/translation task, automatic recomputation, debounce, execution coordinator or deferred service disposal.
+3. **Support text selection and copying.** Both layers support single-click/drag selection, double-click word selection, triple-click paragraph selection, and copying. Paragraph boundaries come from the existing layout analysis, so wrapped lines stay in their paragraph. Clipped translated text remains available for full-paragraph copying. Right-clicking text offers selection copying; the background menu provides Copy all, Original/Translation, Shadow and Close. Background dragging moves the pin; double-clicking the background closes it.
+4. **Keep multiple pins independent.** Later changes to translation services, languages, layout options or display-layer settings leave existing snapshots intact. Menu labels use the existing dynamic language resources. Starting another capture temporarily cloaks pinned content and chrome windows; completing or cancelling the selection restores them, including pins created or closed during capture.
+5. **Preserve the previous shadow and active glow.** The original colors, margins, blur radii, opacity and rendering biases remain unchanged. The chrome now clips the same WPF effects to four edge regions and fills the opaque center directly, reducing intermediate rendering surfaces. It remains one companion window with mouse passthrough. The shadow switch affects the current pin and sets the default for future pins; the active glow remains independent.
 
-与现有架构的关系：主窗口截图/翻译分发、服务管理、OCR 插件和快捷键配置保持上游实现；现有布局分析器只附带已经确定的原始段落归属，未改变分段规则。新增 PinnedWindowController 管理贴图集合和截图隐藏/恢复；内容窗口处理静态显示与交互，Chrome 窗口集中保留原阴影/辉光绘制。Settings 只增加阴影默认值。静态图禁用缩放动画，贴图空闲时没有轮询和重算，创建快照复用现成图片。
+The main-window capture/translation dispatch, service management, OCR plugins and hotkey configuration retain the upstream implementation. The layout analyzer only carries forward paragraph membership it already determined. `PinnedWindowController` manages the pin collection and capture visibility; the content window handles static display and input using the existing `ImageZoom`. The rendering optimization stays inside the existing chrome file. Settings gains only the shadow default.
 
-验证：Debug、Release 构建零警告、零错误；测试代码分支自动回归 315 项通过；本 PR 最终代码重新运行上游原有 274 项测试全部通过。基础功能检查和提交者手动测试已完成，提交者确认当前交互与外观符合预期。窗口级自动检查覆盖多窗隐藏恢复、截图期间新建/关闭窗口及关闭后的回收，三组已关闭贴图的 WeakReference 存活数均为 0。
+Validation:
 
-测试与完整说明见 [测试代码](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/src/Tests/STranslate.Tests)，测量程序、条件和原始 JSONL 见 [性能测试](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/review/pinned-static)。测试程序、规划文档和截图保留在提交者仓库，本 PR 只包含功能代码。
+- Debug and Release builds complete with no warnings or errors.
+- 321 regression tests pass in the test branch, including 168 comparisons against the original chrome renderer across state changes, sizes, and 100%–300% DPI. The rendered BGRA bytes match exactly. A separate 56-case rendering comparison also passes, and the two appearances were checked side by side in a visible layered WPF window.
+- The final upstream candidate runs the original 274 tests successfully.
+- The screenshot/OCR/translation-to-pin flow and core interactions were manually tested by the submitter. The rendering follow-up is covered by the pixel comparisons above. Window-level checks cover capture hide/restore, creation and closure during capture, and release after closing; all closed-window weak references are collected.
 
-性能测量：800×400 固定样本、原文和译文各 73 字符，1000 次快照复制均值约 **7.64 μs**，每次托管分配 **12,032 B**。1 / 10 / 30 个静态窗口各采样 3 秒，记录到的空闲进程 CPU 时间增量均为 **0 ms**；30 窗隐藏加恢复中位数约 **33.4 ms**，包括两次 DWM 同步。
+See [Test code](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/src/Tests/STranslate.Tests) and [Performance tests and raw results](https://github.com/Lne27/STranslate/tree/feature/pinned-static-review/review/pinned-static).
 
-组件内存测量在 Windows 11（build 26200）、x64、.NET 10.0.11、96 DPI、WPF 渲染 Tier 2 下进行。每个独立进程先预热，随后分阶段加入 30 组独立的 800×400 BGRA 原图、标注图和静态贴图；窗口位于屏幕外，最后为 29 个阴影、1 个激活辉光。每阶段等待 Dispatcher 空闲及 500 ms，再完成 GC 后记录进程私有内存。三次独立运行总增量为 **465.50 / 467.66 / 487.98 MiB**，下表取总增量居中的一轮，各占比以该轮总增量为分母：
+Performance and memory measurements:
 
-| 组件加入阶段 | 私有内存增量 | 占总增量 |
+Measured on Windows 11 build 26200, x64, .NET 10.0.11, 96 DPI, WPF Tier 2, using 30 independent 800×400 BGRA source/annotated image pairs and 73 characters per text layer. Windows are shown off-screen. Each configuration runs in three fresh processes after a one-window warm-up.
+
+| Measurement, median of three runs | Previous renderer | Optimized renderer | Reduction |
+| --- | ---: | ---: | ---: |
+| Chrome-stage private-memory increment | 176.23 MiB | 51.33 MiB | 70.9% |
+| Total increment with components added in stages | 459.79 MiB | 355.79 MiB | 22.6% |
+| Total increment after 30 sequential pins, each activated and then deactivated as the next opens | 371.77 MiB | 354.36 MiB | 4.7% |
+
+The staged measurement adds images, text/snapshots, content windows, and chrome in that order; it waits for Dispatcher idle, 500 ms, and a full GC at each stage. The sequence measurement uses the production pin controller, allows each new pin to render while active, and waits two seconds before the final GC/sample. These two orders exercise different allocations and reuse of WPF rendering resources.
+
+For the optimized staged run with the median total increment:
+
+| Component stage | Private-memory increment | Share of total |
 | --- | ---: | ---: |
-| 原图 | 27.68 MiB | 5.92% |
-| 标注图、译文覆盖层与文字快照 | 37.22 MiB | 7.96% |
-| 内容窗口、ImageZoom 与 WPF 渲染 | 263.30 MiB | 56.30% |
-| 阴影及激活辉光伴随窗口 | 139.46 MiB | 29.82% |
-| 合计 | **467.66 MiB** | **100.00%** |
+| Source images | 26.77 MiB | 7.52% |
+| Annotated images, translated text and snapshots | 33.68 MiB | 9.47% |
+| Content windows, ImageZoom and WPF rendering | 244.02 MiB | 68.59% |
+| Shadow and active-glow companion windows | 51.33 MiB | 14.43% |
+| Total | **355.79 MiB** | **100%** |
 
-表中是按加入顺序记录的进程内存增量，包含对应阶段的渲染资源与运行时缓存。文字覆盖层和快照另行记录的托管保留量增量为 30 组共 **505.53 KiB**。Pin 实际操作复用 Compact 已生成的原图与标注图；本组完整组件测量从创建图片开始计量。
+Percentages are rounded.
 
-提交者提供的测试截图（Compact 工具条、多贴图、阴影/辉光与右键菜单）：
+Snapshot copying averages **8.58 μs** over 1,000 iterations and allocates **12,032 bytes** per snapshot. The 30-window cloak/restore median is **33.09 ms**, including two DWM synchronizations. Chrome drawing is rebuilt on size, DPI or active-state changes; moving an unchanged pin reuses its drawing.
 
-![Compact 贴图功能测试截图](https://raw.githubusercontent.com/Lne27/STranslate/feature/pinned-static-review/review/pinned-static/test-image-1.png)
+The window-level creation sample takes **152 ms** for one pin (previously **139 ms**), and **2.85 s** for a rapid batch of 30 (previously **2.16 s**). The additional clipped drawing nodes trade some initialization time for smaller rendering surfaces.
+
+The memory figures are process-private increments recorded as each component is added, including rendering resources and runtime caches. Actual pinning shares the images already produced by Compact. Content rendering retains the existing hardware-accelerated ImageZoom and transparent-image behavior. Static pins have no polling or OCR/translation recomputation, and their zoom animations are disabled.
+
+Below is a screenshot from testing in a real usage scenario:
+
+![Screenshot from testing Compact pinning in a real usage scenario](https://raw.githubusercontent.com/Lne27/STranslate/feature/pinned-static-review/review/pinned-static/test-image-1.png)
